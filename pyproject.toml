@@ -1,0 +1,55 @@
+[tool.ruff]
+line-length = 99
+target-version = "py310"
+extend-select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "I",    # isort
+]
+ignore = [
+    "E501",  # line-length (handled by black)
+    "B008",  # function calls in default args
+    "SIM117", # nested with blocks (common in quantum code)
+    "UP007", # Use X | Y for type hints (py3.10+ only)
+]
+exclude = [
+    ".git", "__pycache__", ".venv",
+    "results/", "data/",
+]
+
+[tool.ruff.per-file-ignores]
+"tests/**" = ["S101", "ANN"]  # allow assert in tests, skip annotations
+"notebooks/**" = ["E402", "F401", "T201"]  # allow out-of-order imports, unused, print
+
+[tool.black]
+line-length = 99
+target-version = ["py310", "py311"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*", "scripts/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 60

@@ -1,73 +1,131 @@
 """
 analysis.py
 -----------
-Energy comparison, error analysis, and plotting utilities.
+Energy comparison, error reporting, and chemical accuracy utilities.
+Used by notebooks and the test suite.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
+from __future__ import annotations
+import math
+
+CHEM_ACCURACY_mHa: float = 1.6   # 1 kcal/mol ≈ 1.594 mHa
+HA_TO_mHA: float = 1000.0
 
 
-def energy_comparison_table(
-    molecule_results: dict,
-    reference_method: str = "fci",
-) -> pd.DataFrame:
+def compute_correlation_energy(
+    hf: float,
+    fci: float,
+    unit: str = "Ha",
+) -> float:
     """
-    Build a DataFrame comparing HF, CCSD, VQE, and FCI energies.
+    Return the electron correlation energy E_corr = E_FCI - E_HF.
 
     Parameters
     ----------
-    molecule_results : dict mapping molecule_name -> dict with keys
-                       'hf_energy', 'ccsd_energy', 'vqe_energy', 'fci_energy'
-    reference_method : method to use as reference for error calculation
+    hf   : Hartree-Fock energy (Ha)
+    fci  : FCI energy (Ha)
+    unit : 'Ha' or 'mHa' — unit of the returned value
 
     Returns
     -------
-    df : pd.DataFrame
+    float  (negative for a correlated system, as FCI < HF)
     """
-    rows = []
-    for name, res in molecule_results.items():
-        ref = res.get(f"{reference_method}_energy", np.nan)
-        row = {
-            "Molecule": name,
-            "HF (Ha)": res.get("hf_energy", np.nan),
-            "CCSD (Ha)": res.get("ccsd_energy", np.nan),
-            "VQE (Ha)": res.get("vqe_energy", np.nan),
-            "FCI (Ha)": res.get("fci_energy", np.nan),
-            "VQE Error (mHa)": (res.get("vqe_energy", np.nan) - ref) * 1000,
-            "CCSD Error (mHa)": (res.get("ccsd_energy", np.nan) - ref) * 1000,
-        }
-        rows.append(row)
-    return pd.DataFrame(rows)
+    corr = fci - hf
+    if unit == "mHa":
+        return corr * HA_TO_mHA
+    return corr
 
 
-def plot_energy_convergence(history: list, title: str = "VQE Convergence"):
-    """Plot VQE energy minimization vs. optimizer iteration."""
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.plot(history, color="steelblue", linewidth=2)
-    ax.axhline(history[-1], color="red", linestyle="--", label=f"Final: {history[-1]:.6f} Ha")
-    ax.set_xlabel("Optimizer Iteration", fontsize=12)
-    ax.set_ylabel("Energy (Hartree)", fontsize=12)
-    ax.set_title(title, fontsize=14)
-    ax.legend()
-    ax.grid(alpha=0.3)
-    plt.tight_layout()
-    return fig
+def compute_error_mHa(vqe: float, fci: float) -> float:
+    """
+    Return |E_VQE - E_FCI| in mHa.
+
+    Parameters
+    ----------
+    vqe : VQE energy (Ha)
+    fci : FCI reference energy (Ha)
+
+    Returns
+    -------
+    float — always non-negative
+    """
+    return abs(vqe - fci) * HA_TO_mHA
 
 
-def plot_qubit_scaling(molecule_names: list, qubit_counts_jw: list, qubit_counts_bk: list):
-    """Bar chart of qubit requirements: JW vs BK for each molecule."""
-    x = np.arange(len(molecule_names))
-    width = 0.35
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.bar(x - width/2, qubit_counts_jw, width, label="Jordan-Wigner", color="steelblue")
-    ax.bar(x + width/2, qubit_counts_bk, width, label="Bravyi-Kitaev", color="darkorange")
-    ax.set_xticks(x)
-    ax.set_xticklabels(molecule_names, rotation=20, ha="right")
-    ax.set_ylabel("Number of Qubits", fontsize=12)
-    ax.set_title("Qubit Requirements: Alkenes & Alkynes (STO-3G)", fontsize=14)
-    ax.legend()
-    ax.grid(axis="y", alpha=0.3)
-    plt.tight_layout()
-    return fig
+def check_chemical_accuracy(
+    vqe: float,
+    fci: float,
+    threshold_mHa: float = CHEM_ACCURACY_mHa,
+) -> bool:
+    """
+    Return True if |E_VQE - E_FCI| <= threshold_mHa.
+
+    The default threshold is 1.6 mHa (≈ 1 kcal/mol, the conventional
+    definition of chemical accuracy in quantum chemistry).
+    """
+    return compute_error_mHa(vqe, fci) <= threshold_mHa
+
+
+def format_energy_table(
+    energies: dict[str, float],
+    fci_energy: float,
+    threshold_mHa: float = CHEM_ACCURACY_mHa,
+) -> str:
+    """
+    Return a formatted string table comparing method energies to FCI.
+
+    Parameters
+    ----------
+    energies      : {method_name: energy_Ha}
+    fci_energy    : FCI reference energy (Ha)
+    threshold_mHa : chemical accuracy threshold (default 1.6 mHa)
+
+    Returns
+    -------
+    str — human-readable table suitable for print() or notebook display
+    """
+    header = f"{'Method':<22} {'Energy (Ha)':>15} {'|ΔE_FCI| (mHa)':>16} {'Chem. acc.':>12}"
+    sep = "-" * len(header)
+    lines = [header, sep]
+    for method, energy in energies.items():
+        error = compute_error_mHa(energy, fci_energy)
+        acc = "✓" if check_chemical_accuracy(energy, fci_energy, threshold_mHa) else "✗"
+        lines.append(f"{method:<22} {energy:>15.8f} {error:>16.4f} {acc:>12}")
+    return "\n".join(lines)
+
+
+def summarise_vqe_result(
+    result: dict,
+    fci_energy: float,
+    molecule_name: str = "",
+) -> dict:
+    """
+    Given a vqe_runner result dict, compute and return a concise
+    summary suitable for building benchmark tables.
+
+    Parameters
+    ----------
+    result        : dict returned by run_vqe_pennylane or run_adapt_vqe
+    fci_energy    : FCI reference energy
+    molecule_name : optional label for the molecule
+
+    Returns
+    -------
+    dict with keys: molecule, method, energy, error_mHa,
+                    chem_acc, n_params, est_cnots, n_iters
+    """
+    energy = result.get("energy") or result.get("final_energy")
+    if energy is None:
+        raise ValueError("Result dict has no 'energy' key.")
+
+    error = compute_error_mHa(energy, fci_energy)
+    return {
+        "molecule":   molecule_name,
+        "method":     result.get("method", "unknown"),
+        "energy":     energy,
+        "error_mHa":  error,
+        "chem_acc":   check_chemical_accuracy(energy, fci_energy),
+        "n_params":   result.get("n_params") or result.get("n_operators", 0),
+        "est_cnots":  result.get("est_cnot_count", 0),
+        "n_iters":    len(result.get("history", [])),
+    }

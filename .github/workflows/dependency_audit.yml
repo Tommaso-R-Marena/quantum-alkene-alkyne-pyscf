@@ -1,0 +1,41 @@
+# ============================================================
+# dependency_audit.yml  —  Weekly dependency freshness check
+# Reports outdated packages and known CVEs without blocking CI.
+# ============================================================
+name: Dependency Audit
+
+on:
+  schedule:
+    - cron: "0 6 * * 0"   # Every Sunday at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: pip-audit + outdated check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Install project requirements
+        run: pip install -r requirements.txt --quiet || true
+
+      - name: Run pip-audit (CVE scan)
+        run: pip-audit --requirement requirements.txt --output=json > audit_report.json || true
+
+      - name: Show outdated packages
+        run: pip list --outdated
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-report
+          path: audit_report.json
+          retention-days: 30

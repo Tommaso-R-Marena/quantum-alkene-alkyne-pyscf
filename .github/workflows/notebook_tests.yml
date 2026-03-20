@@ -1,0 +1,74 @@
+# ============================================================
+# notebook_tests.yml  —  Execute notebooks with nbmake
+# Runs on push to main and on a nightly schedule.
+# Each notebook is executed cell-by-cell; any cell error fails CI.
+# ============================================================
+name: Notebook Execution Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "notebooks/**"
+      - ".github/workflows/notebook_tests.yml"
+      - "requirements.txt"
+  schedule:
+    - cron: "0 4 * * 1"   # Every Monday at 04:00 UTC (nightly-ish)
+  workflow_dispatch:       # Manual trigger from GitHub UI
+
+jobs:
+  notebook-smoke:
+    name: "Notebook: ${{ matrix.notebook }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false    # run all notebooks even if one fails
+      matrix:
+        notebook:
+          - notebooks/01_alkene_vqe_simulation.ipynb
+          - notebooks/02_alkyne_vqe_simulation.ipynb
+          - notebooks/06_adapt_vqe_comparison.ipynb
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install all notebook dependencies
+        run: |
+          pip install --upgrade pip
+          # Core quantum chemistry
+          pip install "pyscf>=2.5" "openfermion>=1.6" "openfermionpyscf>=0.5"
+          # PennyLane ecosystem
+          pip install "pennylane>=0.38"
+          # Classical / scientific
+          pip install "numpy>=1.24" "scipy>=1.11" "matplotlib>=3.7" \
+                      "seaborn>=0.13" "pandas>=2.0" "tqdm>=4.66" "h5py>=3.9"
+          # Notebook execution
+          pip install "nbmake>=1.5" "jupyter>=1.0" "ipykernel>=6.0"
+
+      - name: Install IPython kernel
+        run: python -m ipykernel install --user --name python3
+
+      - name: Execute notebook — ${{ matrix.notebook }}
+        run: |
+          python -m pytest ${{ matrix.notebook }} \
+            --nbmake \
+            --nbmake-timeout=2400 \
+            --nbmake-kernel=python3 \
+            -v
+        env:
+          # Suppress PySCF verbose output in CI
+          PYSCF_MAX_MEMORY: 4000
+
+      - name: Upload executed notebook as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-notebook-${{ strategy.job-index }}
+          path: ${{ matrix.notebook }}
+          retention-days: 7

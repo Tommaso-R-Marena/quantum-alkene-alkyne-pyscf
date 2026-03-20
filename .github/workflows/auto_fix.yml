@@ -1,0 +1,84 @@
+# ============================================================
+# auto_fix.yml  —  Auto-format and auto-fix code errors
+#
+# Triggered manually OR when the lint job in ci.yml fails.
+# 1. Ruff --fix repairs auto-fixable lint errors in src/ and tests/
+# 2. nbqa ruff --fix repairs auto-fixable errors in notebooks/
+# 3. black formats all .py files
+# 4. nbqa black formats all .ipynb files
+# 5. Commits and pushes any changes back to the triggering branch
+# ============================================================
+name: Auto-Fix Code Style & Logic Errors
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to fix (default: main)"
+        required: false
+        default: main
+  workflow_call:   # Can be called from ci.yml on lint failure
+
+jobs:
+  auto-fix:
+    name: Ruff + Black Auto-Fix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push the fix commit
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install formatting tools
+        run: |
+          pip install --upgrade pip
+          pip install \
+            ruff==0.4.4 \
+            black==24.4.2 \
+            nbqa==1.8.5 \
+            nbformat==5.10.4
+
+      # ── Step 1: auto-fix Python source files ──────────────────────
+      - name: Ruff --fix src/ tests/
+        run: ruff check src/ tests/ --fix --exit-zero
+
+      - name: Black format src/ tests/
+        run: black src/ tests/ --line-length 99
+
+      # ── Step 2: auto-fix notebooks ────────────────────────────────
+      - name: nbqa ruff --fix notebooks/
+        run: nbqa ruff notebooks/ --fix --exit-zero
+
+      - name: nbqa black notebooks/
+        run: nbqa black notebooks/ --line-length 99
+
+      # ── Step 3: run the deep logic-error auto-fixer ───────────────
+      - name: Install quantum deps for deep-fix script
+        run: |
+          pip install numpy scipy pennylane>=0.38
+
+      - name: Run deep auto-fix script
+        run: python scripts/auto_fix_notebooks.py
+
+      # ── Step 4: commit and push if anything changed ───────────────
+      - name: Commit and push fixes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "ci: auto-fix style and logic errors [skip ci]"
+            git push
+          fi
