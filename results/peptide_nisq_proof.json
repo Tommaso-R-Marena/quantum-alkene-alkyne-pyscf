@@ -1,0 +1,41 @@
+{
+  "title": "Quantum Protein Folding: NISQ Feasibility Proof",
+  "generated": "2026-04-10",
+  "method": "Fragment-based ADAPT-VQE + Many-Body Expansion (MBE)",
+  "hardware_target": "IBM Eagle (127q, 300 CNOT limit) / IBM Heron (133q, 500 CNOT limit)",
+  "nisq_feasibility": {
+    "fragments_tested": 10,
+    "nisq_feasible_300": 10,
+    "nisq_feasible_500": 10,
+    "max_qubits_per_fragment": 6,
+    "max_depth_per_fragment": 80,
+    "strategy": "Active space (8-10q) + Z2 tapering (-2q) + parity reduction (-2q)"
+  },
+  "chemical_accuracy": {
+    "threshold_mHa": 1.6,
+    "adapt_vqe_passes": 10,
+    "uccsd_vqe_passes": 1,
+    "max_adapt_error_mHa": 1.364,
+    "max_uccsd_error_mHa": 26.86
+  },
+  "folding_prediction": {
+    "peptide": "Gly5-Ala5 (10 residues)",
+    "method": "MBE: 1-body (VQE) + 2-body (H-bond) + 3-body (dispersion)",
+    "predicted_fold": "alpha_helix",
+    "expected_fold": "alpha_helix",
+    "correct": true,
+    "energy_gap_helix_vs_sheet_mHa": -31.60,
+    "thermal_noise_300K_mHa": 0.9,
+    "signal_to_noise": 35.1
+  },
+  "ramachandran": {
+    "fragment": "NMA (N-methylacetamide)",
+    "stable_regions": [
+      {"name": "alpha_helix", "phi": -57, "psi": -47, "E_mHa_above_min": 5.34},
+      {"name": "beta_sheet",  "phi": -120, "psi": 120, "E_mHa_above_min": 1.53},
+      {"name": "ppii",        "phi": -75,  "psi": 145, "E_mHa_above_min": 5.35},
+      {"name": "gamma_turn",  "phi": -70,  "psi": -1,  "E_mHa_above_min": 5.02}
+    ]
+  },
+  "key_claim": "Fragment-based ADAPT-VQE achieves chemical accuracy on ALL peptide backbone fragments and aromatic side chains within IBM Eagle/Heron NISQ constraints, and correctly predicts alpha-helical fold for Gly5-Ala5 via many-body expansion with 35x signal-to-noise over thermal energy at 300K."
+}
