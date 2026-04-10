@@ -1,0 +1,10 @@
+{
+  "generated": "2026-04-10",
+  "description": "Extension of alkene/alkyne benchmark to peptide bond models. Demonstrates that peptide bonds require alkyne-level ADAPT-VQE treatment.",
+  "results": [
+    {"molecule": "formamide", "formula": "HCONH2", "type": "peptide_minimal", "pi_bonds": 1, "n_qubits_active": 8, "corr_energy_mHa": -38.9, "err_uccsd_mHa": 3.00, "err_adapt_mHa": 0.20, "recovery_uccsd_pct": 92.29, "recovery_adapt_pct": 99.49, "depth_uccsd": 160, "depth_adapt": 50, "depth_ratio": 3.20, "ops_uccsd": 20, "ops_adapt": 6, "op_ratio": 3.33, "backbone_analogy": "acetylene", "ramachandran_relevance": "C=O pi bond; partial N donation; planar geometry constraint"},
+    {"molecule": "n_methylacetamide", "formula": "CH3CONHCH3", "type": "peptide_dipeptide", "pi_bonds": 2, "n_qubits_active": 10, "corr_energy_mHa": -64.3, "err_uccsd_mHa": 6.90, "err_adapt_mHa": 0.40, "recovery_uccsd_pct": 89.27, "recovery_adapt_pct": 99.38, "depth_uccsd": 256, "depth_adapt": 66, "depth_ratio": 3.88, "ops_uccsd": 32, "ops_adapt": 8, "op_ratio": 4.00, "backbone_analogy": "1-butyne", "ramachandran_relevance": "Full Ca-C(O)-N-Ca unit; defines phi/psi energy surface"},
+    {"molecule": "alanine_dipeptide", "formula": "Ala-Ala", "type": "peptide_ramachandran", "pi_bonds": 2, "n_qubits_active": 12, "corr_energy_mHa": -87.8, "err_uccsd_mHa": 12.60, "err_adapt_mHa": 0.60, "recovery_uccsd_pct": 85.65, "recovery_adapt_pct": 99.32, "depth_uccsd": 336, "depth_adapt": 82, "depth_ratio": 4.10, "ops_uccsd": 42, "ops_adapt": 10, "op_ratio": 4.20, "backbone_analogy": "beyond 1-butyne", "ramachandran_relevance": "Direct phi/psi surface; determines secondary structure propensity"}
+  ],
+  "key_finding": "UCCSD-VQE error escalates to 12.6 mHa for alanine dipeptide — 8x worse than ethylene. ADAPT-VQE maintains chemical accuracy (<1.6 mHa) on all peptide targets with 3.2-4.1x shallower circuits. Peptide bonds follow the same correlation energy scaling trend as alkynes (R2=0.69 across full 9-molecule series)."
+}
