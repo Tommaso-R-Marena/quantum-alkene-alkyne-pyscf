@@ -4,11 +4,39 @@
 
 ## ⚛️ Notebooks
 
+[![Notebook 09 – Gold Standard Verification ★](https://img.shields.io/badge/Notebook%2009-Gold%20Standard%20Verification%20★-gold?logo=jupyter&logoColor=white&style=for-the-badge)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/09_gold_standard_verification.ipynb)
+
+> **Start here.** Notebook 09 is the single authoritative reproducibility record for all numerical claims in this project. Every result is computed live, assertion-gated, and multi-seed validated. If you can run this notebook and all 8 assertions pass, the results are confirmed.
+
 [![Notebook 08 – Quantum Protein Folding Proof ★](https://img.shields.io/badge/Notebook%2008-Quantum%20Protein%20Folding%20Proof%20★-brightgreen?logo=jupyter&logoColor=white&style=for-the-badge)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/08_peptide_quantum_folding_proof.ipynb)
 
 [![Notebook 01 – Alkene VQE](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/01_alkene_vqe_simulation.ipynb)
 [![Notebook 02 – Alkyne VQE](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/02_alkyne_vqe_simulation.ipynb)
 [![Notebook 06 – ADAPT-VQE](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/06_adapt_vqe_comparison.ipynb)
+
+---
+
+## 📋 Notebook 09 — Gold Standard Verification
+
+**The reproducibility contract for this project.**
+
+| Claim | What is verified | Tolerance |
+|-------|-----------------|-----------|
+| C1 | CASCI(6,6) formamide = −166.70175309 Ha | ±0.001 mHa |
+| C2 | CASCI(8,8) NMA = −243.87734454 Ha | ±0.001 mHa |
+| C3 | H_mat exact diag matches CASCI (independent code path) | < 0.001 mHa |
+| C4 | Naive ecore causes > 40 Ha error in JW spectrum | demonstrated live |
+| C5 | Corrected JW ground state matches H_mat | < 0.001 mHa |
+| C6 | VQE best-of-5 seeds achieves chemical accuracy (< 1.6 mHa) | hard threshold |
+| C7 | α-helix is global minimum for Gly₅-Ala₅ MBE landscape | correct label |
+| C8 | α-helix vs β-sheet gap > 10× kT at 300 K | SNR threshold |
+
+Every claim is backed by an `AssertionError` — the notebook halts if any result deviates. VQE is run from 5 independent random seeds and mean ± std is reported alongside the best result, so no single lucky initialization can be mistaken for a method result. All external parameters (CMAP, dispersion) are cited inline with DOIs.
+
+**What Notebook 09 does NOT claim:**
+- Real IBM Quantum hardware results (Notebook 08 §6, pending quota renewal)
+- Publication-quality energetics in a large basis (STO-3G throughout; basis convergence is a separate study)
+- Replacement of a full-protein quantum calculation (fragment feasibility only)
 
 ---
 
@@ -73,16 +101,15 @@ iop = InteractionOperator(ecore_needed, one_body_so, 0.5 * two_body_so)  # ✅ 0
 
 This fix is **fully reproducible**, exact, and applicable to any PySCF→OpenFermion→Qiskit pipeline.
 
-### Verified Result Chain (Notebook 08)
+### Verified Result Chain (Notebook 09 — assertion-gated)
 
 | Step | Result | Status |
 |------|--------|--------|
-| CASCI(6,6) reference | −166.70175309 Ha | ✅ PySCF |
-| H_mat exact diag | −166.70175309 Ha | ✅ 0.000 mHa match |
-| JW Hamiltonian (corrected) | −166.70175309 Ha | ✅ after frozen-core fix |
-| VQE (StatevectorEstimator) | −166.70174905 Ha | ✅ **0.004 mHa** |
-| α-helix prediction | SNR = 68.4× kT | ✅ correct |
-| IBM Heron r2 submission | ibm_fez selected | ✅ documented |
+| CASCI(6,6) reference | −166.70175309 Ha | ✅ C1 |
+| H_mat exact diag | −166.70175309 Ha | ✅ C3: 0.000 mHa match |
+| JW Hamiltonian (corrected) | −166.70175309 Ha | ✅ C5: after frozen-core fix |
+| VQE best-of-5 seeds | < 1.6 mHa error | ✅ C6: chemical accuracy |
+| α-helix prediction | SNR > 10× kT | ✅ C7, C8: correct |
 
 ### NISQ Feasibility Path
 
@@ -189,18 +216,19 @@ Molecule (XYZ geometry)
 ```
 quantum-alkene-alkyne-pyscf/
 ├── notebooks/
+│   ├── 09_gold_standard_verification.ipynb  ← ★ START HERE: assertion-gated reproducibility
+│   ├── 08_peptide_quantum_folding_proof.ipynb
 │   ├── 01_alkene_vqe_simulation.ipynb
 │   ├── 02_alkyne_vqe_simulation.ipynb
 │   ├── 03_active_space_tapering.ipynb
 │   ├── 04_hardware_execution.ipynb
 │   ├── 05_benchmark_analysis.ipynb
-│   ├── 06_adapt_vqe_comparison.ipynb
-│   └── 08_peptide_quantum_folding_proof.ipynb  ← ★ Protein folding: verified PySCF + IBM Quantum
+│   └── 06_adapt_vqe_comparison.ipynb
 ├── results/
 │   ├── figures/
-│   │   ├── qubit_scaling.png           ← Fig 1: qubit reduction pipeline
-│   │   ├── vqe_accuracy.png            ← Fig 2: accuracy progression
-│   │   └── folding_landscape.png       ← Fig 3: MBE folding energy landscape
+│   │   ├── qubit_scaling.png
+│   │   ├── vqe_accuracy.png
+│   │   └── folding_landscape.png
 │   └── NISQ_FEASIBILITY_PROOF_APRIL_2026.md
 ├── src/
 ├── data/geometries/
@@ -212,6 +240,14 @@ quantum-alkene-alkyne-pyscf/
 ---
 
 ## Notebook Previews
+
+### 📓 Notebook 09 — Gold Standard Verification ★
+
+**The reproducibility contract.** Eight assertion-gated claims covering the full pipeline from PySCF integrals through VQE to folding prediction. VQE is run from 5 independent random seeds so no single optimizer run can be cherry-picked. The frozen-core bug is demonstrated live before the fix so its 42 Ha magnitude is directly observable. All external parameters carry inline DOI citations.
+
+[![Open In Colab](https://img.shields.io/badge/Open%20in%20Colab-Notebook%2009%20★-gold?logo=googlecolab&style=for-the-badge)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/09_gold_standard_verification.ipynb)
+
+---
 
 ### 📓 Notebook 08 — Quantum Protein Folding Proof ★
 
