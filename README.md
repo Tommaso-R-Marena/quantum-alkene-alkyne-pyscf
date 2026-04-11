@@ -4,6 +4,10 @@
 
 ## ⚛️ Notebooks
 
+[![Notebook 10 – IBM Hardware Execution ★](https://img.shields.io/badge/Notebook%2010-IBM%20Hardware%20Execution%20★-blue?logo=jupyter&logoColor=white&style=for-the-badge)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/10_ibm_hardware_execution.ipynb)
+
+> **Hardware results.** Single-shot EstimatorV2 on real IBM Quantum hardware. Classical VQE derives optimal parameters (0 optimizer calls on hardware), then one Estimator PUB measures ⟨ψ(θ*)| H |ψ(θ*)⟩. Fits within IBM Open Plan's 10-minute session window. Job ID logged as timestamped provenance.
+
 [![Notebook 09 – Gold Standard Verification ★](https://img.shields.io/badge/Notebook%2009-Gold%20Standard%20Verification%20★-gold?logo=jupyter&logoColor=white&style=for-the-badge)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/09_gold_standard_verification.ipynb)
 
 > **Start here.** Notebook 09 is the single authoritative reproducibility record for all numerical claims in this project. Every result is computed live, assertion-gated, and multi-seed validated. If you can run this notebook and all 8 assertions pass, the results are confirmed.
@@ -16,12 +20,80 @@
 
 ---
 
+## 📓 Notebook 10 — IBM Quantum Hardware Execution ★
+
+**The hardware provenance record for this project.**
+
+The original Notebook 08 Section 6 submitted a full VQE optimization loop to IBM hardware (300 COBYLA iterations, each a separate job). This is incompatible with IBM Open Plan's 10-minute session window — queue overhead between iterations exhausts the quota before convergence. Notebook 10 fixes this with the correct architecture used in published NISQ papers.
+
+### Architecture: Classical Parameters → Single Hardware Measurement
+
+```
+Classical VQE (statevector, 5 seeds)
+        │
+        ▼
+  Optimal parameters θ*  ──────────────────────────────────────
+        │                                                       │
+        ▼                                                       ▼
+  ansatz.assign_parameters(θ*)              NO optimizer calls on hardware
+        │
+        ▼
+  Transpile ONCE to backend native gate set (optimization_level=3)
+        │
+        ▼
+  IBM Quantum: ONE EstimatorV2 PUB
+  ├── 8192 shots
+  ├── resilience_level=1 (ZNE basic)
+  └── Session context manager
+        │
+        ▼
+  ⟨ψ(θ*)| H |ψ(θ*)⟩  ←  hardware expectation value
+        │
+        ▼
+  Job ID logged as timestamped hardware provenance
+```
+
+### Session Budget (fits IBM Open Plan 10-minute window)
+
+| Phase | Typical time |
+|-------|-------------|
+| `pip install` + imports | ~60 s |
+| Classical VQE (5 seeds, statevector) | ~30–90 s |
+| Transpilation | ~10 s |
+| Queue wait (small backend, ≤30 qubits) | ~30–90 s |
+| Single Estimator call (8192 shots) | ~30–60 s |
+| **Total** | **~3–6 min** ✅ |
+
+### Key Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| `max_num_qubits=30` in `least_busy()` | Avoids 127-qubit Eagle backends with longer queues |
+| `assign_parameters()` before transpile | All parameters bound — 0 free parameters in hardware circuit |
+| `resilience_level=1` | Basic ZNE with minimal shot overhead |
+| `Session` context manager | Keeps connection alive; avoids re-authentication overhead |
+| `num_parameters == 0` assertion | Guards against accidentally submitting an unbound parametric circuit |
+
+### What the Job ID Proves
+
+The IBM Quantum Job ID returned by Step 5 is a globally unique, server-side authenticated record that:
+- Timestamps the exact moment of hardware execution
+- Records the backend, gate fidelities, and error rates at time of execution
+- Is retrievable for 90 days via `service.job(job_id)`
+- Is citable in a paper's supplementary material as hardware provenance
+
+> **For paper submission:** Include the Job ID in Supplementary Information alongside the backend name, date, and `backend.target` fidelity snapshot.
+
+[![Open In Colab](https://img.shields.io/badge/Open%20in%20Colab-Notebook%2010%20★-blue?logo=googlecolab&style=for-the-badge)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/10_ibm_hardware_execution.ipynb)
+
+---
+
 ## 📋 Notebook 09 — Gold Standard Verification
 
 **The reproducibility contract for this project.**
 
 | Claim | What is verified | Tolerance |
-|-------|-----------------|-----------|
+|-------|-----------------|-----------|-
 | C1 | CASCI(6,6) formamide = −166.70175309 Ha | ±0.001 mHa |
 | C2 | CASCI(8,8) NMA = −243.87734454 Ha | ±0.001 mHa |
 | C3 | H_mat exact diag matches CASCI (independent code path) | < 0.001 mHa |
@@ -34,7 +106,7 @@
 Every claim is backed by an `AssertionError` — the notebook halts if any result deviates. VQE is run from 5 independent random seeds and mean ± std is reported alongside the best result, so no single lucky initialization can be mistaken for a method result. All external parameters (CMAP, dispersion) are cited inline with DOIs.
 
 **What Notebook 09 does NOT claim:**
-- Real IBM Quantum hardware results (Notebook 08 §6, pending quota renewal)
+- Real IBM Quantum hardware results (→ Notebook 10)
 - Publication-quality energetics in a large basis (STO-3G throughout; basis convergence is a separate study)
 - Replacement of a full-protein quantum calculation (fragment feasibility only)
 
@@ -110,6 +182,7 @@ This fix is **fully reproducible**, exact, and applicable to any PySCF→OpenFer
 | JW Hamiltonian (corrected) | −166.70175309 Ha | ✅ C5: after frozen-core fix |
 | VQE best-of-5 seeds | < 1.6 mHa error | ✅ C6: chemical accuracy |
 | α-helix prediction | SNR > 10× kT | ✅ C7, C8: correct |
+| **IBM Quantum hardware** | **Job ID logged** | **→ Notebook 10** |
 
 ### NISQ Feasibility Path
 
@@ -203,7 +276,7 @@ Molecule (XYZ geometry)
         │                                                     │
         └──────────────────────┬──────────────────────────────┘
                                ▼
-           Aer Statevector Simulator  →  IBM Quantum (Eagle/Heron)
+           Aer Statevector Simulator  →  IBM Quantum (Eagle/Heron) [Notebook 10]
                                ▼
         Results: E_ground, ΔE vs FCI, circuit depth, qubit count,
                  HOMO-LUMO gap, correlation energy recovery
@@ -216,6 +289,7 @@ Molecule (XYZ geometry)
 ```
 quantum-alkene-alkyne-pyscf/
 ├── notebooks/
+│   ├── 10_ibm_hardware_execution.ipynb      ← ★ IBM Quantum single-shot hardware run
 │   ├── 09_gold_standard_verification.ipynb  ← ★ START HERE: assertion-gated reproducibility
 │   ├── 08_peptide_quantum_folding_proof.ipynb
 │   ├── 01_alkene_vqe_simulation.ipynb
@@ -241,6 +315,14 @@ quantum-alkene-alkyne-pyscf/
 
 ## Notebook Previews
 
+### 📓 Notebook 10 — IBM Quantum Hardware Execution ★
+
+**The hardware provenance record.** Classical VQE (5 seeds, statevector) derives optimal parameters θ*, which are bound into the ansatz before any hardware interaction. A single EstimatorV2 PUB with ZNE resilience level 1 and 8192 shots measures ⟨ψ(θ*)| H |ψ(θ*)⟩ on a real IBM Quantum backend. The Job ID is printed and logged as citable hardware proof. Designed specifically to fit within IBM Open Plan's 10-minute session window.
+
+[![Open In Colab](https://img.shields.io/badge/Open%20in%20Colab-Notebook%2010%20★-blue?logo=googlecolab&style=for-the-badge)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/10_ibm_hardware_execution.ipynb)
+
+---
+
 ### 📓 Notebook 09 — Gold Standard Verification ★
 
 **The reproducibility contract.** Eight assertion-gated claims covering the full pipeline from PySCF integrals through VQE to folding prediction. VQE is run from 5 independent random seeds so no single optimizer run can be cherry-picked. The frozen-core bug is demonstrated live before the fix so its 42 Ha magnitude is directly observable. All external parameters carry inline DOI citations.
@@ -262,7 +344,7 @@ quantum-alkene-alkyne-pyscf/
 | 3 — H_mat | Exact FCI diag (400×400) | Match = 0.000 mHa ✅ |
 | 4 — VQE | EfficientSU2 + SLSQP + frozen-core fix | **0.004 mHa error** ✅ |
 | 5 — Folding | MBE + CMAP + D3 | α-helix predicted, SNR = 68× |
-| 6 — IBM Quantum | ibm_fez (Heron r2) hardware submission | Job documented |
+| 6 — IBM Quantum | See Notebook 10 for corrected hardware execution | → NB10 |
 
 ---
 
@@ -313,7 +395,7 @@ print(f'Acetylene correlation energy: {corr:.2f} mHa')
 ### 📓 Notebook 06 — ADAPT-VQE vs UCCSD-VQE
 
 | Metric | UCCSD-VQE | ADAPT-VQE |
-|--------|-----------|-----------|
+|--------|-----------|-----------| 
 | Ansatz | Fixed (all singles+doubles) | Adaptive (gradient-selected) |
 | Circuit depth | High, fixed | Grows only as needed |
 | # parameters | `len(singles)+len(doubles)` | Typically 3–10 |
@@ -333,6 +415,7 @@ print(f'Acetylene correlation energy: {corr:.2f} mHa')
 | 2-qubit gate fidelity | ~99.5% | ZNE error mitigation |
 | Connectivity | Heavy-hex topology | BK mapping preferred |
 | Measurement noise | Shot noise ≤16k shots | Estimator primitive + grouping |
+| **Session time limit** | **10 min (Open Plan)** | **Single-shot Estimator (Notebook 10)** |
 
 ---
 
