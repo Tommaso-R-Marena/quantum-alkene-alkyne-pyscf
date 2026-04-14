@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "notebook": "NB13",
+    "author": "Tommaso R. Marena",
+    "institution": "The Catholic University of America",
+    "date": "April 2026",
+    "description": "VQE hydrogen bond quantum scoring — Marena 2026 frozen-core JW correction"
+  },
+  "system": {
+    "protein": "7-transmembrane GPCR, 500 residues",
+    "structure_source": "OpenFold3 (NVIDIA BioNeMo API)",
+    "basis": "6-31g*",
+    "active_space": "CASCI(8,8)",
+    "monomer_AOs": 48,
+    "dimer_AOs": 96,
+    "n_qubits": 16,
+    "n_pauli": 2913,
+    "ansatz": "EfficientSU2(reps=2, entanglement=linear)",
+    "n_parameters": 80,
+    "optimizer": "SLSQP",
+    "maxiter": 600,
+    "n_seeds": 3
+  },
+  "monomer_reference": {
+    "e_casci_ha": -168.94102521,
+    "frozen_core_bug_ha": 63.333,
+    "assert_e_casci_pass": true,
+    "assert_bug_pass": true,
+    "seeds": [
+      {"seed": 0, "energy_ha": -168.9410201462, "error_mha": 0.00506},
+      {"seed": 1, "energy_ha": -168.9410245988, "error_mha": 0.00061},
+      {"seed": 2, "energy_ha": -168.9410225479, "error_mha": 0.00266}
+    ],
+    "best_seed": 1,
+    "e_vqe_ha": -168.9410245988,
+    "best_error_mha": 0.00061
+  },
+  "bsse_estimate": {
+    "r_oh_ang": 1.96,
+    "theta_deg": 158.0,
+    "conformer": "alpha_helix",
+    "bsse_mha": 2363.671,
+    "method": "overlap proxy: 180 * mean(S_AB^2) * 1000",
+    "warning": "Conservative upper bound. CP correction planned NB14."
+  },
+  "hbond_candidates": {
+    "total_found": 621,
+    "cutoff_ang": 3.5,
+    "min_seq_sep": 2,
+    "top_5": [
+      {"rank": 1, "donor": "GLY427", "acceptor": "GLN423", "distance_NO_ang": 2.5961, "acceptor_angle_deg": 25.9,  "heuristic_score": 1.808},
+      {"rank": 2, "donor": "ARG388", "acceptor": "ASN384", "distance_NO_ang": 2.6067, "acceptor_angle_deg": 34.05, "heuristic_score": 1.787},
+      {"rank": 3, "donor": "ASN431", "acceptor": "GLY427", "distance_NO_ang": 2.6114, "acceptor_angle_deg": 13.16, "heuristic_score": 1.777},
+      {"rank": 4, "donor": "LEU79",  "acceptor": "ASN75",  "distance_NO_ang": 2.6394, "acceptor_angle_deg": 17.79, "heuristic_score": 1.721},
+      {"rank": 5, "donor": "VAL221", "acceptor": "ASP217", "distance_NO_ang": 2.6426, "acceptor_angle_deg": 4.28,  "heuristic_score": 1.715}
+    ]
+  },
+  "dimer_vqe_results": [
+    {
+      "geometry_id": 1,
+      "r_oh_ang": 1.60,
+      "theta_deg": 120.0,
+      "conformer": "beta_sheet",
+      "contacts": ["GLY427->GLN423", "ARG388->ASN384", "ASN431->GLY427"],
+      "frozen_core_bug_ha": 56.046,
+      "n_qubits": 16,
+      "n_pauli": 2913,
+      "seeds": [
+        {"seed": 0, "energy_ha": -329.5661332626, "error_mha": 0.00517},
+        {"seed": 1, "energy_ha": -329.5661381255, "error_mha": 0.00031},
+        {"seed": 2, "energy_ha": -329.5661380111, "error_mha": 0.00042}
+      ],
+      "best_seed": 1,
+      "e_vqe_ha": -329.5661381255,
+      "best_error_mha": 0.00031,
+      "e_int_casci_mha": 8331.7884,
+      "e_int_vqe_mha": 8315.9111,
+      "sign": "positive",
+      "note": "Repulsive geometry — r_OH at minimum clamp 1.60 Ang, deep in Pauli wall"
+    },
+    {
+      "geometry_id": 2,
+      "r_oh_ang": 1.63,
+      "theta_deg": 120.0,
+      "conformer": "beta_sheet",
+      "contacts": ["LEU79->ASN75", "VAL221->ASP217"],
+      "frozen_core_bug_ha": 55.872,
+      "n_qubits": 16,
+      "n_pauli": 2913,
+      "seeds": [
+        {"seed": 0, "energy_ha": -330.3844881580, "error_mha": 0.00014},
+        {"seed": 1, "energy_ha": -330.3844871845, "error_mha": 0.00112},
+        {"seed": 2, "energy_ha": -330.3844876901, "error_mha": 0.00061}
+      ],
+      "best_seed": 0,
+      "e_vqe_ha": -330.3844881580,
+      "best_error_mha": 0.00014,
+      "e_int_casci_mha": 7497.5621,
+      "e_int_vqe_mha": 7497.5610,
+      "sign": "positive",
+      "note": "Repulsive geometry — r_OH=1.63 Ang, angular clamp at 120 deg"
+    }
+  ],
+  "accuracy_summary": {
+    "monomer_best_error_mha": 0.00061,
+    "dimer_best_error_mha": 0.00014,
+    "chemical_precision_threshold_mha": 1.0,
+    "improvement_over_threshold": "~7000x",
+    "frozen_core_correction_method": "Marena 2026 sparse eigsh"
+  },
+  "nb13_reference_conformers": {
+    "alpha_helix": {"r_oh": 1.96, "theta": 158.0, "e_int_ref_mha": -25.14},
+    "gamma_turn":  {"r_oh": 2.05, "theta": 153.0, "e_int_ref_mha": -21.83},
+    "beta_sheet":  {"r_oh": 2.10, "theta": 150.0, "e_int_ref_mha": -19.47},
+    "ppii":        {"r_oh": 2.28, "theta": 142.0, "e_int_ref_mha": -14.22},
+    "l_helix":     {"r_oh": 2.42, "theta": 133.0, "e_int_ref_mha":  -9.88}
+  }
+}

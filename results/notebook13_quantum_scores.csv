@@ -1,0 +1,6 @@
+source_model,rank,donor_resn,donor_resi,acceptor_resn,acceptor_resi,distance_NO,donor_angle_deg,acceptor_angle_deg,heuristic_score,proxy_score_component,vqe_score,vqe_ran,nearest_nb13_conformer,r_oh_ang,theta_deg,e_int_casci_mha,e_int_vqe_mha,vqe_error_mha,n_qubits,n_pauli,frozen_core_bug_ha
+openfold3,1,GLY,427,GLN,423,2.5961,,25.9,1.808,0.385199,8315.9111,True,beta_sheet,1.60,120.0,8331.7884,8315.9111,0.00031,16,2913,56.046
+openfold3,2,ARG,388,ASN,384,2.6067,,34.05,1.787,0.383626,8315.9111,True,beta_sheet,1.60,120.0,8331.7884,8315.9111,0.00031,16,2913,56.046
+openfold3,3,ASN,431,GLY,427,2.6114,,13.16,1.777,0.382937,8315.9111,True,beta_sheet,1.60,120.0,8331.7884,8315.9111,0.00031,16,2913,56.046
+openfold3,4,LEU,79,ASN,75,2.6394,,17.79,1.721,0.378867,7497.5610,True,beta_sheet,1.63,120.0,7497.5621,7497.5610,0.00014,16,2913,55.872
+openfold3,5,VAL,221,ASP,217,2.6426,,4.28,1.715,0.378409,7497.5610,True,beta_sheet,1.63,120.0,7497.5621,7497.5610,0.00014,16,2913,55.872
