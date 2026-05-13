@@ -48,19 +48,21 @@ jobs:
           # Classical / scientific
           pip install "numpy>=1.24" "scipy>=1.11" "matplotlib>=3.7" \
                       "seaborn>=0.13" "pandas>=2.0" "tqdm>=4.66" "h5py>=3.9"
-          # Notebook execution
-          pip install "nbmake>=1.5" "jupyter>=1.0" "ipykernel>=6.0"
+          # Notebook execution — use nbconvert directly. nbmake 1.5 has a
+          # kernel-cleanup race that intermittently raises "NBMAKE INTERNAL
+          # ERROR" with `assert self.km is not None` on runner shutdown.
+          pip install "jupyter>=1.0" "ipykernel>=6.0" "nbconvert>=7.16" "nbformat>=5.10"
 
       - name: Install IPython kernel
         run: python -m ipykernel install --user --name python3
 
       - name: Execute notebook — ${{ matrix.notebook }}
         run: |
-          python -m pytest ${{ matrix.notebook }} \
-            --nbmake \
-            --nbmake-timeout=2400 \
-            --nbmake-kernel=python3 \
-            -v
+          jupyter nbconvert \
+            --to notebook --execute "${{ matrix.notebook }}" \
+            --output "$(basename ${{ matrix.notebook }} .ipynb).executed.ipynb" \
+            --ExecutePreprocessor.timeout=2400 \
+            --ExecutePreprocessor.kernel_name=python3
         env:
           # Suppress PySCF verbose output in CI
           PYSCF_MAX_MEMORY: 4000
