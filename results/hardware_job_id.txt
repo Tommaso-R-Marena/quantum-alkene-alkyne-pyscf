@@ -14,3 +14,22 @@ submission_status: submitted; awaiting result
 error: RuntimeJobMaxTimeoutError: 'Error code 1305; Ran too long Increase [max execution time](https://quantum.cloud.ibm.com/docs/guides/max-execution-time) or contact support.'
 submission_status: BLOCKED or PARTIAL
 note: job_id (if any) is recorded above
+
+# === Follow-up query (2026-05-13 21:21 UTC) ===
+# Direct service.job(...).status() / .result() query against the existing job.
+# No new hardware job was submitted.
+job_status: ERROR
+error_message: Job d82dgdvtjchs73bnum4g ran longer than maximum execution time. Job was cancelled.
+result_retrievable: NO
+partial_hardware_energy: none returned (RuntimeJobMaxTimeoutError on .result())
+partial_shot_data: none returned
+created_utc: 2026-05-13T19:59:51.110898Z
+running_started_utc: 2026-05-13T21:02:49.885925Z
+finished_utc: 2026-05-13T21:13:19.203718Z
+queue_wait_sec: 3779
+running_sec: 624
+quantum_seconds: 594
+usage_seconds: 594
+runtime_sdk: qiskit_ibm_runtime-0.45.1, qiskit-2.3.0, qiskit_aer-0.17.2, qiskit_nature-0.7.2
+caller: qiskit_ibm_runtime/estimator.py
+provenance_status: Job ID is genuine and retained as proof of submission/provenance only. No hardware energy is claimed.

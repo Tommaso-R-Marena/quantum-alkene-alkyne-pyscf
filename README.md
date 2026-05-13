@@ -472,7 +472,7 @@ assertion in the same notebook; CI runs Notebook 09 nightly.
 
 | Field | Value |
 |---|---|
-| Job ID | `d82dgdvtjchs73bnum4g` (genuine, recorded 2026-05-13) |
+| Job ID | `d82dgdvtjchs73bnum4g` — **genuine, retained as proof of hardware submission / provenance only** |
 | Backend | `ibm_marrakesh` (156-qubit Heron, IBM Open plan) |
 | Ansatz | EfficientSU2, reps=1, linear entanglement, 48 parameters |
 | Transpiled depth / 2Q gates | 41 / 11 CZ |
@@ -480,7 +480,16 @@ assertion in the same notebook; CI runs Notebook 09 nightly.
 | Error mitigation | ZNE basic (`resilience_level=1`) |
 | Transpiler | preset pass manager, `optimization_level=3` |
 | Mode | one `Batch` block, one `EstimatorV2` PUB |
-| Submission status | **BLOCKED** by IBM Open-plan max-execution-time (error 1305, `RuntimeJobMaxTimeoutError`, 4410 s wall-clock). Job ID is real; no hardware energy was returned. Re-running on an Hourly Premium plan with the same Notebook 10 code will recover the result. |
+| Created (UTC) | 2026-05-13T19:59:51Z |
+| Queue wait | ~3779 s |
+| Running started (UTC) | 2026-05-13T21:02:49Z |
+| Finished (UTC) | 2026-05-13T21:13:19Z |
+| Quantum-seconds used | 594 |
+| Final job status | **ERROR** — `RuntimeJobMaxTimeoutError` (IBM Open Plan max-execution-time policy, error code 1305). The job was cancelled by the IBM platform *after* it began running on the QPU. This is an IBM policy limit, not a code error. |
+| Result retrievable | **No.** A direct `service.job("d82dgdvtjchs73bnum4g").result()` call (2026-05-13 21:21 UTC) raises the same `RuntimeJobMaxTimeoutError`. No partial shot data and no hardware energy were returned. |
+| What the Job ID still proves | (a) The pipeline transpiles, binds theta\*, and submits a single PUB to a real 156-qubit Heron device. (b) The submission was accepted by IBM and ran for 594 quantum-seconds before policy cutoff. (c) Anyone can inspect the same Job ID against IBM Quantum to reproduce these provenance fields. |
+| What we do **not** claim | We claim **no hardware energy** for this Job ID. No `E_hw` value should be cited; only the submission/provenance fields above. |
+| Re-run path | Re-running Notebook 10 unchanged on an Hourly Premium plan (or any tier without the Open-plan max-execution-time cap) will return a hardware energy. |
 
 ## Known Limitations
 
