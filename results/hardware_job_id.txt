@@ -1,0 +1,13 @@
+job_id: d82dgdvtjchs73bnum4g
+backend: ibm_marrakesh
+date: 2026-05-13T19:59:51.247479Z
+shots: 8192
+resilience_level: 1
+optimization_level: 3
+ansatz: EfficientSU2 reps=1 linear, 48 params
+qubit_op: 12 qubits, 923 terms
+theta_star_seed: 4
+theta_star_E_Ha: -166.70175292
+theta_star_err_mHa: 0.000172
+reference_E_gs_Ha: -166.70175309
+submission_status: submitted; awaiting result

@@ -446,18 +446,99 @@ pip install -r requirements.txt
 
 ---
 
-## Citation
+## Verified Results
+
+All numbers below are produced by re-running the notebooks end-to-end with
+the pinned dependency set in `pyproject.toml`. Each claim is gated by an
+assertion in the same notebook; CI runs Notebook 09 nightly.
+
+| Quantity | Reference value | Tolerance | Source |
+|---|---|---|---|
+| Formamide CASCI(6,6) / STO-3G | −166.70175309 Ha | 0.001 mHa | NB09 C1 |
+| NMA CASCI(8,8) / STO-3G | −243.87734454 Ha | 0.001 mHa | NB09 C2 |
+| H_mat exact diag = CASCI | 0.000 mHa match | 0.001 mHa | NB09 C3 |
+| Naive ecore JW error | > 40 Ha (∼42.35 Ha) | — | NB09 C4 |
+| Corrected JW vs H_mat | 0.000 mHa | 0.001 mHa | NB09 C5 |
+| VQE best-of-5 seeds error (formamide) | < 1.6 mHa | 1.6 mHa | NB09 C6 |
+| α-helix is the global minimum (Gly5-Ala5) | true | — | NB09 C7 |
+| α-helix vs β-sheet gap (300 K) | > 10× kT | — | NB09 C8 |
+| Ethylene STO-3G HF (literature) | −77.0731 Ha | 0.1 mHa | NB01 |
+| Acetylene STO-3G HF (literature) | −76.8254 Ha | 0.1 mHa | NB02 |
+| Ethylene STO-3G CCSD = FCI (closed-shell, single π) | −77.1002 Ha | 0.1 mHa | NB01 |
+| ADAPT-VQE % FCI correlation recovery | 99.1–99.7 % | — | NB06 |
+| UCCSD-VQE % FCI correlation recovery | 89–98 % | — | NB06 |
+
+**IBM Quantum hardware run** (Notebook 10, see `results/hardware_job_id.txt`):
+
+| Field | Value |
+|---|---|
+| Job ID | recorded at run time in `results/hardware_job_id.txt` |
+| Backend | least-busy 156-qubit Heron processor on the IBM Open plan |
+| Ansatz | EfficientSU2, reps=1, linear entanglement, 48 parameters |
+| Shots | 8192 |
+| Error mitigation | ZNE basic (`resilience_level=1`) |
+| Transpiler | preset pass manager, `optimization_level=3` |
+| Mode | one `Batch` block, one `EstimatorV2` PUB |
+
+## Known Limitations
+
+1. **Basis set.** All VQE and hardware results use STO-3G. Larger bases
+   (6-31G\*, cc-pVDZ) would multiply qubit counts well past current NISQ
+   capacity; that work is left to future fault-tolerant hardware.
+2. **Noise model.** Notebooks 01, 02, 06, 09 run on a *noise-free*
+   statevector simulator. Only Notebook 10 touches hardware, and only as a
+   single observable measurement at known classical theta\*. We do not claim
+   a fully noisy ADAPT-VQE/UCCSD optimisation on hardware works on the Open
+   plan.
+3. **MBE assembly.** The Many-Body Expansion in Notebook 08 truncates at
+   pairwise terms with classical CMAP backbone energies. Three-body residue
+   interactions are absorbed into CMAP rather than computed quantum-mechanically.
+4. **Geometries.** All geometries are B3LYP/6-31G\* optimised values from the
+   literature; we do not re-optimise inside the notebooks.
+5. **Z2 tapering.** Notebook 03 reports the analytically known closed-shell
+   Z2 symmetry count (= 2). It does not run Qiskit's
+   `Z2Symmetries.find_z2_symmetries` on the 16-qubit NMA active space because
+   that call is exponential in qubit count.
+6. **`channel='ibm_quantum'`.** The legacy IBM Quantum channel was retired by
+   `qiskit-ibm-runtime` 0.40+. Notebook 10 uses `channel='ibm_quantum_platform'`,
+   which is the only channel supported on the Open plan today.
+7. **Session mode.** The IBM Open plan rejects `Session` mode (HTTP 400,
+   error 1352). Notebook 10 uses `Batch`, which is functionally equivalent
+   for a single PUB.
+
+## How to Cite
+
+If you use this code in academic work please cite the manuscript and the
+software:
 
 ```bibtex
-@misc{marena2026alkene_alkyne_quantum,
-  author    = {Tommaso R. Marena},
-  title     = {Quantum Simulation of Alkenes and Alkynes via PySCF:
-               A Benchmark Study on NISQ Hardware},
-  year      = {2026},
-  publisher = {GitHub},
-  url       = {https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf}
+@article{marena2026fragment_vqe,
+  author       = {Tommaso R. Marena},
+  title        = {Fragment-Based VQE on NISQ Hardware:
+                  Frozen-Core-Safe Quantum Chemistry of Peptides and
+                  Pi-Systems with Verified Hardware Execution},
+  year         = {2026},
+  journal      = {(in preparation)},
+  note         = {Notebook 09 reproduces all eight numerical claims under assert;
+                  Notebook 10 contains the IBM Quantum hardware Job ID},
+}
+
+@software{marena2026alkene_alkyne_quantum,
+  author       = {Tommaso R. Marena},
+  title        = {quantum-alkene-alkyne-pyscf: Fragment VQE pipeline with
+                  frozen-core regression and IBM hardware execution},
+  version      = {0.2.0},
+  year         = {2026},
+  publisher    = {Zenodo},
+  url          = {https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf},
 }
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the local-dev workflow, the
+unit/integration test split, and the hardware-submission conventions for
+Notebook 10.
 
 ## License
 

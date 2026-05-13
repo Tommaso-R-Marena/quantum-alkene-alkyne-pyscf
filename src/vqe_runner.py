@@ -6,8 +6,19 @@ Designed for alkene/alkyne active-space Hamiltonians derived from PySCF.
 Supports statevector simulator (default.qubit) and IBM Quantum backends.
 """
 
-import numpy as np
+from __future__ import annotations
+
 from typing import Optional
+
+import numpy as np
+
+# PennyLane is imported lazily inside functions to keep test mocking and
+# notebook import cost low; we also expose `qml` as a module-level name so
+# unit tests can patch it with `patch("src.vqe_runner.qml")`.
+try:
+    import pennylane as qml  # noqa: F401
+except ImportError:  # pragma: no cover
+    qml = None  # type: ignore
 
 
 # ============================================================
@@ -42,11 +53,8 @@ def run_vqe_pennylane(
     -------
     dict : energy, history, parameters, n_params, circuit_depth (estimated)
     """
-    import pennylane as qml
-    from pennylane import qchem
-
-    singles, doubles = qchem.excitations(n_electrons, n_qubits)
-    hf_state = qchem.hf_state(n_electrons, n_qubits)
+    singles, doubles = qml.qchem.excitations(n_electrons, n_qubits)
+    hf_state = qml.qchem.hf_state(n_electrons, n_qubits)
     dev = qml.device(device, wires=n_qubits)
 
     @qml.qnode(dev)
@@ -124,10 +132,7 @@ def build_operator_pool(n_qubits: int, n_electrons: int):
     Returns list of (label, operator_fn) tuples where operator_fn(wires)
     returns the anti-Hermitian generator for that excitation.
     """
-    import pennylane as qml
-    from pennylane import qchem
-
-    singles, doubles = qchem.excitations(n_electrons, n_qubits)
+    singles, doubles = qml.qchem.excitations(n_electrons, n_qubits)
     pool = []
 
     for s in singles:
