@@ -4,23 +4,23 @@ tests/unit/test_analysis.py
 Unit tests for src/analysis.py — energy comparison and error utilities.
 """
 
-import sys
 import math
+import sys
 from unittest.mock import MagicMock
-import pytest
+
 import numpy as np
+import pytest
 
 # Stub heavy dependencies
 for mod in ["openfermion", "openfermionpyscf", "pyscf", "pennylane"]:
     sys.modules.setdefault(mod, MagicMock())
 
 from src.analysis import (  # noqa: E402
-    compute_correlation_energy,
     check_chemical_accuracy,
-    format_energy_table,
+    compute_correlation_energy,
     compute_error_mHa,
+    format_energy_table,
 )
-
 
 CHEM_ACCURACY_mHa = 1.6
 

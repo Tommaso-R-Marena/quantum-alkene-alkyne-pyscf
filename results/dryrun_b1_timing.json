@@ -1,0 +1,59 @@
+{
+  "optimization": "parallel VQE seeds via ProcessPoolExecutor(max_workers=5)",
+  "timings": {
+    "imports_sec": 2.3129587173461914,
+    "hamiltonian_sec": 17.507468938827515,
+    "vqe_5seeds_parallel_sec": 188.17505812644958,
+    "bind_transpile_sec": 0.5880148410797119,
+    "estimator_sim_sec": 0.05714702606201172,
+    "total_sec": 208.6413071155548
+  },
+  "best_seed": 4,
+  "best_e": -166.70175291788468,
+  "best_err_mHa": 0.00017006115626827523,
+  "e_gs": -166.70175308794583,
+  "qubit_op_num_qubits": 12,
+  "qubit_op_num_terms": 923,
+  "ansatz_n_params": 48,
+  "transpiled_depth": 53,
+  "transpiled_2q_gates": 11,
+  "transpiled_ops": {
+    "rz": 77,
+    "sx": 59,
+    "ecr": 11,
+    "x": 1
+  },
+  "e_simulated_estimatorv2": -166.70175291788468,
+  "per_seed": [
+    {
+      "seed": 1,
+      "E": -166.7017525913896,
+      "err_mHa": 0.0004965562254710676,
+      "sec": 176.95161700248718
+    },
+    {
+      "seed": 4,
+      "E": -166.70175291788468,
+      "err_mHa": 0.00017006115626827523,
+      "sec": 163.73466873168945
+    },
+    {
+      "seed": 5,
+      "E": -166.70175281545045,
+      "err_mHa": 0.0002724953844790434,
+      "sec": 173.16524577140808
+    },
+    {
+      "seed": 6,
+      "E": -166.7017527452733,
+      "err_mHa": 0.00034267253568032174,
+      "sec": 188.03246068954468
+    },
+    {
+      "seed": 7,
+      "E": -164.37074457978662,
+      "err_mHa": 2331.008508159215,
+      "sec": 168.85330152511597
+    }
+  ]
+}

@@ -6,7 +6,6 @@ Used by notebooks and the test suite.
 """
 
 from __future__ import annotations
-import math
 
 CHEM_ACCURACY_mHa: float = 1.6   # 1 kcal/mol ≈ 1.594 mHa
 HA_TO_mHA: float = 1000.0

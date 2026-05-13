@@ -6,9 +6,10 @@ All quantum-chemistry libraries are mocked.
 """
 
 import sys
-from unittest.mock import MagicMock, patch, call
-import pytest
+from unittest.mock import MagicMock, call, patch
+
 import numpy as np
+import pytest
 
 # Mock all heavy dependencies before import
 MOCKED_MODULES = [

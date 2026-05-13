@@ -5,11 +5,12 @@ Unit tests for src/vqe_runner.py.
 All PennyLane and quantum-chemistry calls are mocked so tests are fast.
 """
 
-import sys
 import math
-from unittest.mock import MagicMock, patch, call
-import pytest
+import sys
+from unittest.mock import MagicMock, call, patch
+
 import numpy as np
+import pytest
 
 # Stub heavy dependencies before import
 MOCKED_MODULES = [

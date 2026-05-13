@@ -8,8 +8,6 @@ Supports statevector simulator (default.qubit) and IBM Quantum backends.
 
 from __future__ import annotations
 
-from typing import Optional
-
 import numpy as np
 
 # PennyLane is imported lazily inside functions to keep test mocking and
@@ -156,7 +154,7 @@ def run_adapt_vqe(
     stepsize: float = 0.4,
     conv_tol: float = 1e-9,
     device: str = "default.qubit",
-    fci_energy: Optional[float] = None,
+    fci_energy: float | None = None,
     verbose: bool = True,
 ):
     """
@@ -317,7 +315,7 @@ def compare_vqe_methods(
     qubit_hamiltonian,
     n_qubits: int,
     n_electrons: int,
-    fci_energy: Optional[float] = None,
+    fci_energy: float | None = None,
     device: str = "default.qubit",
     verbose: bool = True,
 ):

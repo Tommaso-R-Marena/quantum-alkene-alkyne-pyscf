@@ -5,9 +5,9 @@ Builds PySCF Mole objects and OpenFermion MolecularData for
 alkenes and alkynes using optimized geometries.
 """
 
-from pyscf import gto
 from openfermion.chem import MolecularData
 from openfermionpyscf import run_pyscf
+from pyscf import gto
 
 # -------------------------------------------------------------------
 # Equilibrium geometries (Angstrom) — B3LYP/6-31G* optimized

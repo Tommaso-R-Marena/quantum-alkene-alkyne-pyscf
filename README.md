@@ -2,6 +2,11 @@
 
 > **Status:** Active development | Targeting publication at *J. Chem. Theory Comput.* or *npj Quantum Information*
 
+[![CI — Lint, Type-Check & Unit Tests](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/ci.yml)
+[![Notebook Execution Tests](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/notebook_tests.yml/badge.svg?branch=main)](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/notebook_tests.yml)
+[![Dependency Audit](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/dependency_audit.yml/badge.svg?branch=main)](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/dependency_audit.yml)
+[![Auto-Fix](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/auto_fix.yml/badge.svg?branch=main)](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/auto_fix.yml)
+
 ## ⚛️ Notebooks
 
 [![Notebook 10 – IBM Hardware Execution ★](https://img.shields.io/badge/Notebook%2010-IBM%20Hardware%20Execution%20★-blue?logo=jupyter&logoColor=white&style=for-the-badge)](https://colab.research.google.com/github/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/blob/main/notebooks/10_ibm_hardware_execution.ipynb)

@@ -6,13 +6,13 @@ All heavy quantum-chemistry calls (run_pyscf) are mocked so
 these tests run in <5 s with zero GPU/CPU requirements.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
-
 # ---------------------------------------------------------------------------
 # We mock openfermion, openfermionpyscf, and pyscf before importing src code
 # ---------------------------------------------------------------------------
 import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 MOCKED_MODULES = [
     "pyscf", "pyscf.gto", "pyscf.scf", "pyscf.cc",
@@ -23,8 +23,8 @@ for mod in MOCKED_MODULES:
     sys.modules.setdefault(mod, MagicMock())
 
 from src.molecule_builder import (  # noqa: E402
-    MOLECULE_GEOMETRIES,
     MOLECULE_CHARGES,
+    MOLECULE_GEOMETRIES,
     MOLECULE_MULTIPLICITIES,
     build_molecular_data,
     run_classical_calcs,

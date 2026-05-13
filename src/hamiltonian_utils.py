@@ -6,16 +6,13 @@ Supports Jordan-Wigner and Bravyi-Kitaev transformations,
 active-space selection, and qubit tapering.
 """
 
-import numpy as np
 from openfermion import (
+    bravyi_kitaev,
     get_fermion_operator,
     jordan_wigner,
-    bravyi_kitaev,
-    QubitOperator,
 )
-from openfermion.utils import count_qubits
 from openfermion.transforms import freeze_orbitals
-from openfermionpyscf import run_pyscf
+from openfermion.utils import count_qubits
 
 
 def get_qubit_hamiltonian(

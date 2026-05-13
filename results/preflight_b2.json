@@ -1,0 +1,27 @@
+{
+  "auth_channel": "ibm_quantum_platform",
+  "backend_name": "ibm_marrakesh",
+  "backend_num_qubits": 156,
+  "selection_note": "widened: min=13 (account has no [4,30]-qubit devices)",
+  "pending_jobs": 0,
+  "status_msg": "active",
+  "operational": true,
+  "transpiled_depth": 41,
+  "transpiled_2q_gates": 11,
+  "transpiled_ops": {
+    "rz": 64,
+    "sx": 54,
+    "cz": 11
+  },
+  "circuit_num_parameters": 0,
+  "est_queue_sec": 0,
+  "est_exec_sec": 60,
+  "est_total_sec": 60,
+  "queue_budget_sec": 300,
+  "total_budget_sec": 480,
+  "queue_ok": true,
+  "total_ok": true,
+  "overall_pass": true,
+  "session_supported_on_open_plan": false,
+  "execution_mode_for_b3": "Batch"
+}
