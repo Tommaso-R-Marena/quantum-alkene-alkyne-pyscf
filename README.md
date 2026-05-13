@@ -472,13 +472,15 @@ assertion in the same notebook; CI runs Notebook 09 nightly.
 
 | Field | Value |
 |---|---|
-| Job ID | recorded at run time in `results/hardware_job_id.txt` |
-| Backend | least-busy 156-qubit Heron processor on the IBM Open plan |
+| Job ID | `d82dgdvtjchs73bnum4g` (genuine, recorded 2026-05-13) |
+| Backend | `ibm_marrakesh` (156-qubit Heron, IBM Open plan) |
 | Ansatz | EfficientSU2, reps=1, linear entanglement, 48 parameters |
+| Transpiled depth / 2Q gates | 41 / 11 CZ |
 | Shots | 8192 |
 | Error mitigation | ZNE basic (`resilience_level=1`) |
 | Transpiler | preset pass manager, `optimization_level=3` |
 | Mode | one `Batch` block, one `EstimatorV2` PUB |
+| Submission status | **BLOCKED** by IBM Open-plan max-execution-time (error 1305, `RuntimeJobMaxTimeoutError`, 4410 s wall-clock). Job ID is real; no hardware energy was returned. Re-running on an Hourly Premium plan with the same Notebook 10 code will recover the result. |
 
 ## Known Limitations
 

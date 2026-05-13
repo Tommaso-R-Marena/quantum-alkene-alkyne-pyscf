@@ -11,3 +11,6 @@ theta_star_E_Ha: -166.70175292
 theta_star_err_mHa: 0.000172
 reference_E_gs_Ha: -166.70175309
 submission_status: submitted; awaiting result
+error: RuntimeJobMaxTimeoutError: 'Error code 1305; Ran too long Increase [max execution time](https://quantum.cloud.ibm.com/docs/guides/max-execution-time) or contact support.'
+submission_status: BLOCKED or PARTIAL
+note: job_id (if any) is recorded above
