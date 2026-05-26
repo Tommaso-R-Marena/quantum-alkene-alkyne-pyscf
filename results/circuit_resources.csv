@@ -1,0 +1,4 @@
+Active Space,n_qubits,n_parameters,n_2q_gates,circuit_depth
+"(2e,2o)",4,3,56,73
+"(4e,4o)",8,26,1408,1679
+"(6e,6o)",12,117,10008,11467

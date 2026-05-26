@@ -1,0 +1,20 @@
+\begin{tabular}{llrrrl}
+\toprule
+Molecule & Method & Energy (Ha) & Error vs FCI (mHa) & Error (kcal/mol) & Chemical Accuracy? \\
+\midrule
+ethylene & HF & -77.072123 & 163.272340 & 102.454940 & ✗ \\
+ethylene & MP2 & -77.195710 & 39.684872 & 24.902633 & ✗ \\
+ethylene & CISD & -77.222864 & 12.531546 & 7.863664 & ✗ \\
+ethylene & CCSD & -77.234166 & 1.229421 & 0.771473 & ✓ \\
+ethylene & CCSD(T) & -77.234835 & 0.560235 & 0.351553 & ✓ \\
+ethylene & FCI & -77.235395 & 0.000000 & 0.000000 & ✓ \\
+ethylene & VQE-UCCSD (2e,2o) & -77.116629 & 118.766206 & 74.526919 & ✗ \\
+acetylene & HF & -75.852851 & 171.894037 & 107.865137 & ✗ \\
+acetylene & MP2 & -76.003446 & 21.298763 & 13.365176 & ✗ \\
+acetylene & CISD & -76.009464 & 15.280376 & 9.588581 & ✗ \\
+acetylene & CCSD & -76.022234 & 2.510631 & 1.575445 & ✗ \\
+acetylene & CCSD(T) & -76.022878 & 1.866907 & 1.171502 & ✗ \\
+acetylene & FCI & -76.024745 & 0.000000 & 0.000000 & ✓ \\
+acetylene & VQE-UCCSD (2e,2o) & -75.864483 & 160.262282 & 100.566100 & ✗ \\
+\bottomrule
+\end{tabular}

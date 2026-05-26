@@ -1,0 +1,2 @@
+molecule,basis,active_space,qubits_before_tapering,qubits_after_tapering,fci_active_space_Ha,fci_tapered_Ha,vqe_untapered_Ha,energy_diff_Ha
+ethylene,sto-3g,"(2e,2o)",4,1,-77.11662916098877,-77.11662916098877,-77.11662916084838,6.661338147750939e-16
