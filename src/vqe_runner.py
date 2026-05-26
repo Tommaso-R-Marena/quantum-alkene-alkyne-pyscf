@@ -1,18 +1,25 @@
 """
 vqe_runner.py
 -------------
-UCCSD-VQE and ADAPT-VQE execution wrappers using PennyLane.
-Designed for alkene/alkyne active-space Hamiltonians derived from PySCF.
-Supports statevector simulator (default.qubit) and IBM Quantum backends.
+VQE drivers for the alkene/alkyne project.
+
+Primary path: qiskit-nature 0.7+ UCCSD ansatz, qiskit_aer.AerSimulator
+('statevector') with qiskit_aer.primitives.Estimator, SLSQP primary
+optimizer (scipy.optimize.minimize) with COBYLA fallback. Returns a
+VQEResult-like dict consumed by notebooks and analysis utilities.
+
+Legacy: PennyLane UCCSD-VQE / ADAPT-VQE wrappers, retained because the
+existing unit tests patch ``src.vqe_runner.qml``.
 """
 
 from __future__ import annotations
 
+import time
+from typing import Any, Callable
+
 import numpy as np
 
-# PennyLane is imported lazily inside functions to keep test mocking and
-# notebook import cost low; we also expose `qml` as a module-level name so
-# unit tests can patch it with `patch("src.vqe_runner.qml")`.
+# Module-level "qml" handle so unit tests can patch it.
 try:
     import pennylane as qml  # noqa: F401
 except ImportError:  # pragma: no cover
@@ -20,7 +27,125 @@ except ImportError:  # pragma: no cover
 
 
 # ============================================================
-# UCCSD-VQE (fixed ansatz)
+# Primary: Qiskit-native UCCSD-VQE on AerSimulator (statevector)
+# ============================================================
+
+def run_uccsd_vqe_qiskit(
+    qubit_op,
+    problem,
+    primary: str = "SLSQP",
+    fallback: str = "COBYLA",
+    ftol: float = 1e-9,
+    maxiter: int = 1000,
+    initial_point: np.ndarray | None = None,
+    verbose: bool = False,
+) -> dict:
+    """Run UCCSD-VQE for an ElectronicStructureProblem.
+
+    Uses qiskit_aer.AerSimulator(method='statevector') and
+    qiskit_aer.primitives.Estimator. SLSQP is tried first; on failure
+    or NaN result, COBYLA is used.
+    """
+    from qiskit_aer import AerSimulator
+    from qiskit_aer.primitives import Estimator as AerEstimator
+    from qiskit_nature.second_q.circuit.library import HartreeFock, UCCSD
+    from qiskit_nature.second_q.mappers import JordanWignerMapper
+    from scipy.optimize import minimize
+
+    n_alpha, n_beta = problem.num_particles
+    n_spatial = problem.num_spatial_orbitals
+    mapper = JordanWignerMapper()
+
+    hf = HartreeFock(
+        num_spatial_orbitals=n_spatial,
+        num_particles=(n_alpha, n_beta),
+        qubit_mapper=mapper,
+    )
+    ansatz = UCCSD(
+        num_spatial_orbitals=n_spatial,
+        num_particles=(n_alpha, n_beta),
+        qubit_mapper=mapper,
+        initial_state=hf,
+    )
+
+    backend = AerSimulator(method="statevector")
+    estimator = AerEstimator(
+        backend_options={"method": "statevector"},
+        run_options={"shots": None},
+        approximation=True,
+    )
+
+    n_params = ansatz.num_parameters
+    if initial_point is None:
+        initial_point = np.zeros(n_params)
+
+    # Sum of all energy-shift constants (nuclear repulsion + any
+    # transformer offsets such as ActiveSpaceTransformer / FreezeCore).
+    consts = getattr(problem.hamiltonian, "constants", None)
+    if consts is None:
+        energy_shift = float(problem.nuclear_repulsion_energy or 0.0)
+    else:
+        energy_shift = float(sum(consts.values()))
+
+    history: list[float] = []
+
+    def energy_fn(params: np.ndarray) -> float:
+        job = estimator.run([ansatz], [qubit_op], [params])
+        e_elec = float(job.result().values[0])
+        e_total = e_elec + energy_shift
+        history.append(e_total)
+        if verbose and (len(history) % 25 == 0):
+            print(f"  iter {len(history):4d}  E = {e_total:.8f} Ha")
+        return e_total
+
+    t0 = time.time()
+    used_optimizer = primary
+    try:
+        res = minimize(
+            energy_fn,
+            initial_point,
+            method=primary,
+            options={"ftol": ftol, "maxiter": maxiter},
+        )
+        final_energy = float(res.fun)
+        if not np.isfinite(final_energy):
+            raise RuntimeError("Primary optimizer returned non-finite energy")
+    except Exception as e:
+        if verbose:
+            print(f"  Primary {primary} failed ({e}); falling back to {fallback}")
+        used_optimizer = fallback
+        res = minimize(
+            energy_fn,
+            initial_point,
+            method=fallback,
+            options={"maxiter": maxiter, "rhobeg": 0.1, "catol": 1e-8},
+        )
+        final_energy = float(res.fun)
+    wall = time.time() - t0
+
+    try:
+        depth = ansatz.decompose().depth()
+    except Exception:
+        depth = ansatz.depth()
+
+    return {
+        "method": "UCCSD-VQE",
+        "final_energy_Ha": final_energy,
+        "energy": final_energy,
+        "n_iterations": len(history),
+        "circuit_depth": int(depth),
+        "n_parameters": int(n_params),
+        "n_params": int(n_params),
+        "wall_time_seconds": float(wall),
+        "energy_history": history,
+        "history": history,
+        "optimizer_used": used_optimizer,
+        "energy_shift": float(energy_shift),
+    }
+
+
+# ============================================================
+# Legacy: UCCSD-VQE (PennyLane)
 # ============================================================
 
 def run_vqe_pennylane(
@@ -33,24 +158,7 @@ def run_vqe_pennylane(
     conv_tol: float = 1e-9,
     verbose: bool = True,
 ):
-    """
-    UCCSD-VQE using PennyLane AllSinglesDoubles ansatz.
-
-    Parameters
-    ----------
-    qubit_hamiltonian : PennyLane Hamiltonian (from openfermion_to_pennylane)
-    n_qubits          : int
-    n_electrons       : int (active electrons)
-    device            : PennyLane device string
-    stepsize          : gradient descent step size
-    max_iter          : max optimizer steps
-    conv_tol          : convergence threshold on |ΔE|
-    verbose           : print progress
-
-    Returns
-    -------
-    dict : energy, history, parameters, n_params, circuit_depth (estimated)
-    """
+    """UCCSD-VQE via PennyLane AllSinglesDoubles (legacy)."""
     singles, doubles = qml.qchem.excitations(n_electrons, n_qubits)
     hf_state = qml.qchem.hf_state(n_electrons, n_qubits)
     dev = qml.device(device, wires=n_qubits)
@@ -76,11 +184,9 @@ def run_vqe_pennylane(
             print(f"  [UCCSD-VQE] step {step:4d} | E = {energy:.8f} Ha")
         if step > 5 and abs(energies[-1] - energies[-2]) < conv_tol:
             if verbose:
-                print(f"  [UCCSD-VQE] Converged at step {step} | E = {energies[-1]:.8f} Ha")
+                print(f"  [UCCSD-VQE] Converged at step {step}")
             break
 
-    # Estimate two-qubit gate count from excitation operators
-    # Each double ~ 8 CNOTs, each single ~ 2 CNOTs (rough UCCSD estimate)
     est_cnots = len(doubles) * 8 + len(singles) * 2
 
     return {
@@ -97,50 +203,17 @@ def run_vqe_pennylane(
 
 
 # ============================================================
-# ADAPT-VQE (adaptive ansatz)
+# Legacy: ADAPT-VQE helpers (PennyLane)
 # ============================================================
 
-def _commutator_gradient(hamiltonian, operator, state_fn, wires):
-    """
-    Estimate the gradient of <H> w.r.t. adding `operator` to the ansatz
-    via finite difference on a single-parameter circuit.
-
-    gradient ≈ d/dθ <ψ(θ)|H|ψ(θ)> at θ=0
-    """
-    import pennylane as qml
-
-    dev = qml.device("default.qubit", wires=wires)
-
-    @qml.qnode(dev)
-    def probe(theta):
-        state_fn()                    # current ansatz state
-        qml.apply(qml.exp(operator, theta))  # probe new operator
-        return qml.expval(hamiltonian)
-
-    # Parameter-shift gradient at θ=0
-    grad = (probe(np.pi / 2) - probe(-np.pi / 2)) / 2.0
-    return abs(float(grad))
-
-
 def build_operator_pool(n_qubits: int, n_electrons: int):
-    """
-    Build the generalized singles-and-doubles (GSD) operator pool
-    for ADAPT-VQE as a list of PennyLane OrbitalRotation-style operators.
-
-    Returns list of (label, operator_fn) tuples where operator_fn(wires)
-    returns the anti-Hermitian generator for that excitation.
-    """
+    """Return a generalized singles+doubles operator pool (legacy)."""
     singles, doubles = qml.qchem.excitations(n_electrons, n_qubits)
     pool = []
-
     for s in singles:
-        label = f"S_{s[0]}_{s[1]}"
-        pool.append((label, "single", s))
-
+        pool.append((f"S_{s[0]}_{s[1]}", "single", s))
     for d in doubles:
-        label = f"D_{d[0]}_{d[1]}_{d[2]}_{d[3]}"
-        pool.append((label, "double", d))
-
+        pool.append((f"D_{d[0]}_{d[1]}_{d[2]}_{d[3]}", "double", d))
     return pool
 
 
@@ -157,107 +230,43 @@ def run_adapt_vqe(
     fci_energy: float | None = None,
     verbose: bool = True,
 ):
-    """
-    ADAPT-VQE: adaptively grow the ansatz by greedily selecting the
-    operator from the GSD pool with the largest energy gradient.
-
-    Algorithm (Grimsley et al., Nat. Commun. 2019):
-    -----------------------------------------------
-    1. Start from Hartree-Fock reference |ψ₀⟩ = |HF⟩
-    2. For each operator A_i in the pool, compute |∂E/∂θ_i| at θ=0
-    3. Add the operator with the largest gradient to the ansatz
-    4. Re-optimize all parameters with VQE
-    5. Repeat until max(|∂E/∂θ_i|) < gradient_threshold
-
-    Parameters
-    ----------
-    qubit_hamiltonian   : PennyLane Hamiltonian
-    n_qubits            : int
-    n_electrons         : int (active)
-    gradient_threshold  : stop when max gradient < this value
-    max_operators       : maximum ansatz operators before forced stop
-    max_vqe_iter        : VQE iterations per ADAPT cycle
-    stepsize            : optimizer step size
-    conv_tol            : VQE inner convergence tolerance
-    device              : PennyLane device
-    fci_energy          : optional FCI reference for error tracking
-    verbose             : print progress
-
-    Returns
-    -------
-    dict : energy, history, selected_operators, parameters,
-           n_operators, circuit_depth, error_mHa
-    """
+    """Legacy PennyLane ADAPT-VQE — kept for backwards compat."""
     import pennylane as qml
     from pennylane import qchem
     from scipy.optimize import minimize
 
     hf_state = qchem.hf_state(n_electrons, n_qubits)
     pool = build_operator_pool(n_qubits, n_electrons)
-    singles_pool = [(l, d) for l, t, d in pool if t == "single"]
-    doubles_pool = [(l, d) for l, t, d in pool if t == "double"]
 
     dev = qml.device(device, wires=n_qubits)
-
-    # Tracks the growing ansatz
-    selected_operators = []  # list of (label, type, excitation_indices)
+    selected_operators: list = []
     params = np.array([])
-    energy_history = []      # energy after each ADAPT macro-iteration
-
-    if verbose:
-        print(f"ADAPT-VQE | {n_qubits} qubits | {n_electrons} active electrons")
-        print(f"Pool size: {len(pool)} operators | threshold: {gradient_threshold}\n")
+    energy_history: list = []
 
     for adapt_iter in range(max_operators):
-
-        # ---- Step 1: compute gradients for all pool operators ----
-        @qml.qnode(dev)
-        def current_state():
-            """Current ADAPT ansatz state (no measurement)."""
-            qml.BasisState(hf_state, wires=range(n_qubits))
-            for idx, (label, op_type, exc) in enumerate(selected_operators):
-                if op_type == "single":
-                    qml.SingleExcitation(params[idx], wires=exc)
-                else:
-                    qml.DoubleExcitation(params[idx], wires=exc)
-            return qml.state()
-
         gradients = []
         for label, op_type, exc in pool:
-            # Probe circuit: current state + candidate operator
             @qml.qnode(dev)
-            def probe_circuit(theta, exc=exc, op_type=op_type):
+            def probe(theta, exc=exc, op_type=op_type):
                 qml.BasisState(hf_state, wires=range(n_qubits))
                 for idx2, (_, t2, e2) in enumerate(selected_operators):
                     if t2 == "single":
                         qml.SingleExcitation(params[idx2], wires=e2)
                     else:
                         qml.DoubleExcitation(params[idx2], wires=e2)
-                # New candidate
                 if op_type == "single":
                     qml.SingleExcitation(theta, wires=exc)
                 else:
                     qml.DoubleExcitation(theta, wires=exc)
                 return qml.expval(qubit_hamiltonian)
-
-            grad = abs((probe_circuit(np.pi/2) - probe_circuit(-np.pi/2)) / 2.0)
-            gradients.append(grad)
+            gradients.append(abs((probe(np.pi/2) - probe(-np.pi/2)) / 2.0))
 
         max_grad = max(gradients)
         best_idx = int(np.argmax(gradients))
-
-        if verbose:
-            print(f"  ADAPT iter {adapt_iter+1:2d} | max|grad| = {max_grad:.6f} "
-                  f"| best op: {pool[best_idx][0]}")
-
         if max_grad < gradient_threshold:
-            if verbose:
-                print(f"  Converged: max gradient {max_grad:.2e} < {gradient_threshold}")
             break
-
-        # ---- Step 2: add best operator, re-optimize all params ----
         selected_operators.append(pool[best_idx])
-        params = np.append(params, 0.0)  # initialize new param at 0
+        params = np.append(params, 0.0)
 
         @qml.qnode(dev)
         def adapt_circuit(p):
@@ -269,30 +278,17 @@ def run_adapt_vqe(
                     qml.DoubleExcitation(p[idx], wires=exc)
             return qml.expval(qubit_hamiltonian)
 
-        # Inner VQE optimization (scipy L-BFGS-B for fast convergence)
-        res = minimize(
-            adapt_circuit, params,
-            method="L-BFGS-B",
-            jac=qml.grad(adapt_circuit),
-            options={"maxiter": max_vqe_iter, "ftol": conv_tol},
-        )
+        res = minimize(adapt_circuit, params, method="L-BFGS-B",
+                       jac=qml.grad(adapt_circuit),
+                       options={"maxiter": max_vqe_iter, "ftol": conv_tol})
         params = res.x
-        energy = float(res.fun)
-        energy_history.append(energy)
+        energy_history.append(float(res.fun))
 
-        err_str = ""
-        if fci_energy is not None:
-            err_str = f" | ΔE={abs(energy-fci_energy)*1000:.4f} mHa"
-        if verbose:
-            print(f"           Energy = {energy:.8f} Ha{err_str}")
-
-    # Estimate circuit depth: each single ~ 2 CNOTs, each double ~ 8 CNOTs
     n_singles_sel = sum(1 for _, t, _ in selected_operators if t == "single")
     n_doubles_sel = sum(1 for _, t, _ in selected_operators if t == "double")
     est_cnots = n_singles_sel * 2 + n_doubles_sel * 8
-
-    error_mHa = abs(energy_history[-1] - fci_energy) * 1000 if fci_energy else None
-
+    err = (abs(energy_history[-1] - fci_energy) * 1000
+           if fci_energy and energy_history else None)
     return {
         "method": "ADAPT-VQE",
         "energy": energy_history[-1] if energy_history else None,
@@ -303,12 +299,12 @@ def run_adapt_vqe(
         "n_singles": n_singles_sel,
         "n_doubles": n_doubles_sel,
         "est_cnot_count": est_cnots,
-        "error_mHa": error_mHa,
+        "error_mHa": err,
     }
 
 
 # ============================================================
-# Unified comparison runner
+# Unified comparison (legacy)
 # ============================================================
 
 def compare_vqe_methods(
@@ -319,34 +315,17 @@ def compare_vqe_methods(
     device: str = "default.qubit",
     verbose: bool = True,
 ):
-    """
-    Run both UCCSD-VQE and ADAPT-VQE on the same Hamiltonian and
-    return a side-by-side comparison dict. This is the primary
-    function for generating publication-ready benchmark tables.
-    """
-    print("=" * 60)
-    print("Running UCCSD-VQE...")
-    print("=" * 60)
-    uccsd_result = run_vqe_pennylane(
-        qubit_hamiltonian, n_qubits, n_electrons,
-        device=device, verbose=verbose
-    )
-
-    print()
-    print("=" * 60)
-    print("Running ADAPT-VQE...")
-    print("=" * 60)
-    adapt_result = run_adapt_vqe(
-        qubit_hamiltonian, n_qubits, n_electrons,
-        fci_energy=fci_energy, device=device, verbose=verbose
-    )
-
-    comparison = {
+    uccsd_result = run_vqe_pennylane(qubit_hamiltonian, n_qubits, n_electrons,
+                                     device=device, verbose=verbose)
+    adapt_result = run_adapt_vqe(qubit_hamiltonian, n_qubits, n_electrons,
+                                 fci_energy=fci_energy, device=device, verbose=verbose)
+    return {
         "UCCSD-VQE": {
             "energy": uccsd_result["energy"],
             "n_params": uccsd_result["n_params"],
             "est_cnot_count": uccsd_result["est_cnot_count"],
-            "error_mHa": abs(uccsd_result["energy"] - fci_energy) * 1000 if fci_energy else None,
+            "error_mHa": (abs(uccsd_result["energy"] - fci_energy) * 1000
+                          if fci_energy else None),
             "n_iterations": uccsd_result["n_iterations"],
         },
         "ADAPT-VQE": {
@@ -358,18 +337,3 @@ def compare_vqe_methods(
             "selected": adapt_result["selected_operators"],
         },
     }
-
-    if verbose:
-        print()
-        print("=" * 60)
-        print("COMPARISON SUMMARY")
-        print("=" * 60)
-        print(f"{'Metric':<30} {'UCCSD-VQE':>15} {'ADAPT-VQE':>15}")
-        print("-" * 60)
-        print(f"{'Energy (Ha)':<30} {comparison['UCCSD-VQE']['energy']:>15.8f} {comparison['ADAPT-VQE']['energy']:>15.8f}")
-        if fci_energy:
-            print(f"{'Error vs FCI (mHa)':<30} {comparison['UCCSD-VQE']['error_mHa']:>15.4f} {comparison['ADAPT-VQE']['error_mHa']:>15.4f}")
-        print(f"{'# Parameters':<30} {comparison['UCCSD-VQE']['n_params']:>15} {comparison['ADAPT-VQE']['n_params']:>15}")
-        print(f"{'Est. CNOT count':<30} {comparison['UCCSD-VQE']['est_cnot_count']:>15} {comparison['ADAPT-VQE']['est_cnot_count']:>15}")
-
-    return comparison

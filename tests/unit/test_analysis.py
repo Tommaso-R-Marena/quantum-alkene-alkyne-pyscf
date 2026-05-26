@@ -54,10 +54,9 @@ class TestCheckChemicalAccuracy:
         assert check_chemical_accuracy(vqe=-1.005, fci=-1.0) is False
 
     def test_exact_threshold_is_within(self):
-        # Just inside the 1.6 mHa threshold; avoids float-subtraction noise
-        # of (fci - 1.6e-3) which overshoots by ~5e-14 and breaks the <= check.
+        # Just inside the 1.5936 mHa (1 kcal/mol) chemical-accuracy threshold.
         fci = -1.0
-        vqe = fci - 1.5999e-3
+        vqe = fci - 1.59e-3
         assert check_chemical_accuracy(vqe=vqe, fci=fci) is True
 
     def test_custom_threshold(self):
