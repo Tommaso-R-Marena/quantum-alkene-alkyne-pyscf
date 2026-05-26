@@ -15,7 +15,6 @@ existing unit tests patch ``src.vqe_runner.qml``.
 from __future__ import annotations
 
 import time
-from typing import Any, Callable
 
 import numpy as np
 
@@ -48,7 +47,7 @@ def run_uccsd_vqe_qiskit(
     """
     from qiskit_aer import AerSimulator
     from qiskit_aer.primitives import Estimator as AerEstimator
-    from qiskit_nature.second_q.circuit.library import HartreeFock, UCCSD
+    from qiskit_nature.second_q.circuit.library import UCCSD, HartreeFock
     from qiskit_nature.second_q.mappers import JordanWignerMapper
     from scipy.optimize import minimize
 

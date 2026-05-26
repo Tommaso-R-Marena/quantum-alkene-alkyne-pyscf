@@ -166,7 +166,7 @@ def run_pyscf_references(
     Returns {method_name: energy_Ha}. FCI may be skipped silently for
     bases where it would be intractable.
     """
-    from pyscf import scf, mp, ci, cc, fci
+    from pyscf import cc, ci, fci, mp, scf
 
     mol = build_pyscf_mol(name, basis=basis, verbose=verbose)
     out: dict = {}
