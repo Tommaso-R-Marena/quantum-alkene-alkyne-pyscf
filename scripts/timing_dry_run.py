@@ -195,6 +195,43 @@ timings['step5_estimator_s'] = round(time.time() - t5, 2)
 print(f"[Step 5] Statevector E={e_sim:.6f} Ha, "
       f"err={sim_err:.2f} mHa | {timings['step5_estimator_s']}s")
 
+# ── Step 5b: pre-hardware ISA sanity check ──────────────────────────────────
+# Mirror of Notebook 10 Step 5b. Catch a layout / observable mismatch on a
+# noiseless statevector BEFORE any hardware submission. The ISA circuit is laid
+# out on the full backend register (>100 qubits), which cannot be statevector-
+# simulated; the layout is a permutation+embedding of the logical circuit, so
+# the logical (ansatz_bound, qubit_op) PUB is the faithful, simulable proxy.
+# A large deviation from the bound VQE energy means the layout is wrong.
+t5b = time.time()
+
+# Structural checks (cheap, no simulation).
+assert circuit_isa.num_parameters == 0, \
+    "Step 5b: ISA circuit still has free parameters"
+assert circuit_isa.layout is not None, \
+    "Step 5b: transpiled circuit has no TranspileLayout"
+assert qubit_op_isa.num_qubits == circuit_isa.num_qubits, \
+    (f"Step 5b: layout mismatch — observable {qubit_op_isa.num_qubits} qubits "
+     f"!= ISA circuit {circuit_isa.num_qubits} qubits")
+
+# Numerical check: noiseless logical PUB must reproduce the bound VQE energy.
+isa_job = sv_est.run([(ansatz_bound, qubit_op)], precision=0.0)
+e_isa_check = float(isa_job.result()[0].data.evs)
+isa_dev_mHa = abs(e_isa_check - best_e) * 1000
+ISA_SANITY_TOL_mHa = 1.0  # noiseless reproduction of best_e; numerical only
+timings['step5b_isa_sanity_s'] = round(time.time() - t5b, 2)
+timings['step5b_e_isa_check_Ha'] = round(float(e_isa_check), 8)
+timings['step5b_isa_dev_mHa'] = round(float(isa_dev_mHa), 6)
+timings['step5b_isa_sanity_tol_mHa'] = ISA_SANITY_TOL_mHa
+timings['step5b_isa_sanity_pass'] = bool(isa_dev_mHa < ISA_SANITY_TOL_mHa)
+print(f"[Step 5b] ISA sanity: E_check={e_isa_check:.8f} Ha "
+      f"(best_e={best_e:.8f} Ha), dev={isa_dev_mHa:.6f} mHa "
+      f"(tol {ISA_SANITY_TOL_mHa:.1f} mHa) | {timings['step5b_isa_sanity_s']}s")
+assert isa_dev_mHa < ISA_SANITY_TOL_mHa, \
+    (f"Step 5b ISA sanity FAILED: layout/observable mismatch — noiseless ISA "
+     f"energy deviates {isa_dev_mHa:.4f} mHa > {ISA_SANITY_TOL_mHa:.1f} mHa "
+     f"from bound statevector energy. DO NOT submit to hardware.")
+print("[Step 5b] PASS — ISA PUB consistent; safe to proceed to hardware.")
+
 # ── Final gate ───────────────────────────────────────────────────────────────
 t_total = time.time() - t_total_start
 timings['total_wall_time_s'] = round(t_total, 2)
