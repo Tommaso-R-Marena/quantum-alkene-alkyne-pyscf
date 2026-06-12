@@ -1,6 +1,6 @@
-job_id: d8m0qajnn5bs738snvug
+job_id: d8m1mrj2d42s73cc2itg
 backend: ibm_fez
-submitted_utc: 2026-06-12T13:44:11.095411Z
+submitted_utc: 2026-06-12T14:45:03.064849Z
 shots: 4096
 resilience_level: 0
 optimization_level: 3
@@ -9,10 +9,10 @@ theta_star_seed: 4
 theta_star_E_Ha: -166.70175292
 reference_E_gs_Ha: -166.70175309
 status: SUBMITTED_AWAITING_RESULT
-E_hw_Ha: -163.849080
-hw_err_mHa: 2852.67
-finished_utc: 2026-06-12T14:03:43.973583Z
-wall_time_s: 1173.8
+E_hw_Ha: -164.146759
+hw_err_mHa: 2554.99
+finished_utc: 2026-06-12T14:51:47.742596Z
+wall_time_s: 405.7
 c9_tolerance_mHa: 150.0
 c9_status: FAIL
 status: COMPLETED_C9_FAILED

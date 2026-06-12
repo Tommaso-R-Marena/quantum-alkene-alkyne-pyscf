@@ -13,12 +13,12 @@ Circuit depth      : 41
 2Q gates           : 11
 Shots              : 4096
 Resilience level   : 0 (no ZNE)
-Job ID             : d8m0qajnn5bs738snvug
-Submitted (UTC)    : 2026-06-12T13:44:11.095411Z
-Finished (UTC)     : 2026-06-12T14:03:43.973583Z
-Wall time          : 1173.8s
-E (hardware)       : -163.849080 Ha
-Hardware error     : 2852.67 mHa  (NISQ noise floor)
+Job ID             : d8m1mrj2d42s73cc2itg
+Submitted (UTC)    : 2026-06-12T14:45:03.064849Z
+Finished (UTC)     : 2026-06-12T14:51:47.742596Z
+Wall time          : 405.7s
+E (hardware)       : -164.146759 Ha
+Hardware error     : 2554.99 mHa  (NISQ noise floor)
 C9 assertion       : FAIL (>= 150 mHa)
 Run status         : COMPLETED_C9_FAILED
 
