@@ -1,23 +1,30 @@
 HARDWARE PROVENANCE — quantum-alkene-alkyne-pyscf
-==================================================
-Status             : PENDING — awaiting Notebook 10 execution
-Last updated       : (this file is overwritten by Notebook 10 Step 6)
+====================================================
+Molecule           : formamide (HCONH2)
+Basis set          : STO-3G
+Active space       : CASCI(6,6) → 12 qubits (Jordan-Wigner)
+Reference energy   : E(CASCI) = -166.70175309 Ha
+Ansatz             : EfficientSU2, reps=1, linear entanglement
+Optimizer          : SLSQP (maxiter=1000)
+Best statevector   : E = -166.70175292 Ha  (seed 4, err = 0.0002 mHa)
+Backend            : ibm_fez
+Transpiler         : preset pass manager, optimization_level=3
+Circuit depth      : 41
+2Q gates           : 11
+Shots              : 4096
+Resilience level   : 0 (no ZNE)
+Job ID             : d8m0qajnn5bs738snvug
+Submitted (UTC)    : 2026-06-12T13:44:11.095411Z
+Finished (UTC)     : 2026-06-12T14:03:43.973583Z
+Wall time          : 1173.8s
+E (hardware)       : -163.849080 Ha
+Hardware error     : 2852.67 mHa  (NISQ noise floor)
+C9 assertion       : FAIL (>= 150 mHa)
+Run status         : COMPLETED_C9_FAILED
 
 Prior failed runs:
-  Job d82fmentjchs73bo17ig — 2026-05-13T22:29:14Z, ibm_marrakesh (156-qubit
-    Heron), ERROR RuntimeJobMaxTimeoutError (IBM error 1305), 594 quantum-sec.
-  Job d82dgdvtjchs73bnum4g — same failure mode.
+  d82fmentjchs73bo17ig — 2026-05-13, ibm_marrakesh, ERROR 1305 (resilience_level=1, 8192 shots, 594 qs)
+  d82dgdvtjchs73bnum4g — same failure mode
 
-Root cause of failures:
-  resilience_level=1 (ZNE) multiplies circuit invocations on Heron hardware.
-  Combined with 8192 shots, total QPU time exceeded IBM Open Plan 10-min cap.
-
-Fixes applied in current version of Notebook 10:
-  - resilience_level: 1 → 0  (disables ZNE; eliminates circuit multiplication)
-  - shots:           8192 → 4096  (halves QPU wall time)
-  - least_busy():    added max_num_qubits=30  (avoids large-backend queues)
-  - Dry-run gate:    scripts/timing_dry_run.py must PASS (< 570s) before
-                     any IBM hardware call is made.
-
-This file will be overwritten with real Job ID, E_hw, and provenance fields
-upon successful completion of Notebook 10 Step 6.
+NOTE: resilience_level=0 (no ZNE). A future run with resilience_level=1 and 8192 shots on an Hourly Premium plan
+would provide ZNE-mitigated energy with smaller error bars.
