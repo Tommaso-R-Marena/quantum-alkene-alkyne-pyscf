@@ -2,6 +2,8 @@
 
 > **Status:** Active development | Targeting publication at *J. Chem. Theory Comput.* or *npj Quantum Information*
 
+PLEASE NOTE: The hardware result cited in the NeurIPS submission is documented in full at results/notebook10_ibm_hardware_final_april2026.md
+
 [![CI — Lint, Type-Check & Unit Tests](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/ci.yml)
 [![Notebook Execution Tests](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/notebook_tests.yml/badge.svg?branch=main)](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/notebook_tests.yml)
 [![Dependency Audit](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/dependency_audit.yml/badge.svg?branch=main)](https://github.com/Tommaso-R-Marena/quantum-alkene-alkyne-pyscf/actions/workflows/dependency_audit.yml)
