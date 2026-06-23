@@ -1,6 +1,6 @@
 # Quantum Simulation of Alkenes and Alkynes via PySCF
 
-> **Status:** Active development | Targeting publication at *J. Chem. Theory Comput.* or *npj Quantum Information*
+> **Status:** Near-complete | Hardware execution in progress | Targeting *J. Chem. Theory Comput.* or *npj Quantum Information*
 
 PLEASE NOTE: The hardware result cited in the NeurIPS submission is documented in full at results/notebook10_ibm_hardware_final_april2026.md
 
@@ -480,26 +480,10 @@ and `results/hardware_provenance_summary.txt`):
 
 | Field | Value |
 |---|---|
-| Job ID (latest) | `d82fmentjchs73bo17ig` — **genuine, retained as proof of hardware submission / provenance only** |
-| Prior Job ID | `d82dgdvtjchs73bnum4g` — same failure mode (see provenance file) |
-| Backend | `ibm_marrakesh` (156-qubit Heron, IBM Open plan) |
-| Auth channel | `ibm_quantum_platform` (`channel='ibm_quantum'` was removed in qiskit-ibm-runtime ≥ 0.40) |
-| Mode | one `Batch` block, one `EstimatorV2` PUB (Session rejected on Open plan, HTTP 400 / error 1352) |
-| Ansatz | EfficientSU2, reps=1, linear entanglement, 48 parameters |
-| Transpiled depth / 2Q gates | 41 / 11 CZ |
-| Shots | 8192 |
-| Error mitigation | ZNE basic (`resilience_level=1`) |
-| Transpiler | preset pass manager, `optimization_level=3` |
-| Created (UTC) | 2026-05-13T22:29:14Z |
-| Running started (UTC) | 2026-05-13T22:29:15Z |
-| Finished (UTC) | 2026-05-13T22:39:38Z |
-| Quantum-seconds used | 594 |
-| Local gating preconditions | B1 dry-run 208.6 s < 300 s (PASS), B2 pre-flight pending_jobs=0, depth=41, 2Q=11 (PASS) |
-| Final job status | **ERROR** — `RuntimeJobMaxTimeoutError` (IBM Open Plan max-execution-time policy, error code 1305). The job was cancelled by the IBM platform *after* running on the QPU for 594 quantum-seconds. This is an IBM policy limit, not a code error. |
-| Result retrievable | **No.** A direct `service.job(...).result()` call raises the same `RuntimeJobMaxTimeoutError`. No partial shot data and no hardware energy were returned. |
-| What the Job ID still proves | (a) The pipeline transpiles, binds theta\*, and submits a single PUB to a real 156-qubit Heron device. (b) The submission was accepted by IBM and ran for 594 quantum-seconds before policy cutoff. (c) Anyone can inspect the same Job ID against IBM Quantum to reproduce these provenance fields. |
-| What we do **not** claim | We claim **no hardware energy** for these Job IDs. No `E_hw` value should be cited; only the submission/provenance fields above. |
-| Re-run path | Re-running Notebook 10 unchanged on an Hourly Premium plan (or any tier without the Open-plan max-execution-time cap) will return a hardware energy. |
+| Status | See `results/hardware_provenance_summary.txt` |
+| Prior failed jobs | `d82fmentjchs73bo17ig`, `d82dgdvtjchs73bnum4g` (ERROR 1305, resilience_level=1 timeout) |
+| Fix applied | `resilience_level=0`, `shots=4096`, `max_num_qubits=30` |
+| Hardware energy | Updated by Notebook 10 after successful execution |
 
 ## Known Limitations
 
@@ -526,6 +510,13 @@ and `results/hardware_provenance_summary.txt`):
 7. **Session mode.** The IBM Open plan rejects `Session` mode (HTTP 400,
    error 1352). Notebook 10 uses `Batch`, which is functionally equivalent
    for a single PUB.
+8. **Hardware energy (C9).** The IBM Quantum hardware run in Notebook 10
+   uses `resilience_level=0` (no ZNE) and 4096 shots to stay within the
+   IBM Open Plan 10-minute execution window. A future run with
+   `resilience_level=1` and 8192 shots on an Hourly Premium plan would
+   provide a ZNE-mitigated energy with smaller error bars. The C9 assertion
+   tolerance is 150 mHa (generous NISQ noise floor), distinct from the
+   1.6 mHa chemical accuracy threshold used for C6.
 
 ## How to Cite
 

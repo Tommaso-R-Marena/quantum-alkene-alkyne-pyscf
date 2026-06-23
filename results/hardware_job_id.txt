@@ -1,41 +1,18 @@
-job_id: d82fmentjchs73bo17ig
-backend: ibm_marrakesh
-date: 2026-05-13T22:29:14.503355Z
-shots: 8192
-resilience_level: 1
+job_id: d8m1mrj2d42s73cc2itg
+backend: ibm_fez
+submitted_utc: 2026-06-12T14:45:03.064849Z
+shots: 4096
+resilience_level: 0
 optimization_level: 3
-ansatz: EfficientSU2 reps=1 linear, 48 params
-qubit_op: 12 qubits, 923 terms
+ansatz_reps: 1
 theta_star_seed: 4
 theta_star_E_Ha: -166.70175292
 reference_E_gs_Ha: -166.70175309
-transpiled_depth: 41
-transpiled_2q_gates: 11
-auth_channel: ibm_quantum_platform
-b1_dryrun_sec: 208.6
-b1_dryrun_pass: True
-b2_preflight_pass: True
-b2_pending_jobs_at_submit: 0
-submission_status: ERROR
-final_status: ERROR
-error: RuntimeJobMaxTimeoutError 'Error code 1305; Ran too long Increase max execution time or contact support.'
-result_retrievable: NO
-partial_hardware_energy: none returned (RuntimeJobMaxTimeoutError on .result())
-created_utc: 2026-05-13T22:29:14.389930Z
-running_started_utc: 2026-05-13T22:29:15.454164Z
-finished_utc: 2026-05-13T22:39:38.261966Z
-quantum_seconds: 594
-runtime_sdk: qiskit_ibm_runtime-0.45.1, qiskit-2.3.0, qiskit_aer-0.17.2, qiskit_nature-0.7.2
-caller: qiskit_ibm_runtime/estimator.py
-provenance_status: Job ID is genuine and retained as proof of submission. No hardware energy is claimed.
-
-# ===== Prior job (2026-05-13 19:59 UTC) =====
-prior_job_id: d82dgdvtjchs73bnum4g
-prior_final_status: ERROR (RuntimeJobMaxTimeoutError, 594 quantum-seconds, same root cause)
-
-# ===== Pattern note =====
-# Both jobs submitted from this account hit error 1305 after ~594 quantum-seconds.
-# The IBM Open Plan max-execution-time limit is below what 1 EstimatorV2 PUB
-# with 923 Pauli terms + ZNE (resilience_level=1) at 8192 shots requires on
-# ibm_marrakesh (Heron r2). Re-running unchanged on an Hourly Premium plan
-# (or any tier that lifts the max-execution-time cap) will return a value.
+status: SUBMITTED_AWAITING_RESULT
+E_hw_Ha: -164.146759
+hw_err_mHa: 2554.99
+finished_utc: 2026-06-12T14:51:47.742596Z
+wall_time_s: 405.7
+c9_tolerance_mHa: 150.0
+c9_status: FAIL
+status: COMPLETED_C9_FAILED

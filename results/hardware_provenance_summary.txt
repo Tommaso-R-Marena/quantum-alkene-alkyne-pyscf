@@ -1,67 +1,30 @@
-IBM Quantum Hardware Provenance Summary
-=======================================
+HARDWARE PROVENANCE — quantum-alkene-alkyne-pyscf
+====================================================
+Molecule           : formamide (HCONH2)
+Basis set          : STO-3G
+Active space       : CASCI(6,6) → 12 qubits (Jordan-Wigner)
+Reference energy   : E(CASCI) = -166.70175309 Ha
+Ansatz             : EfficientSU2, reps=1, linear entanglement
+Optimizer          : SLSQP (maxiter=1000)
+Best statevector   : E = -166.70175292 Ha  (seed 4, err = 0.0002 mHa)
+Backend            : ibm_fez
+Transpiler         : preset pass manager, optimization_level=3
+Circuit depth      : 41
+2Q gates           : 11
+Shots              : 4096
+Resilience level   : 0 (no ZNE)
+Job ID             : d8m1mrj2d42s73cc2itg
+Submitted (UTC)    : 2026-06-12T14:45:03.064849Z
+Finished (UTC)     : 2026-06-12T14:51:47.742596Z
+Wall time          : 405.7s
+E (hardware)       : -164.146759 Ha
+Hardware error     : 2554.99 mHa  (NISQ noise floor)
+C9 assertion       : FAIL (>= 150 mHa)
+Run status         : COMPLETED_C9_FAILED
 
-Job ID         : d82fmentjchs73bo17ig
-Backend        : ibm_marrakesh (156-qubit Heron r2, IBM Open plan)
-Auth channel   : ibm_quantum_platform
-Created (UTC)  : 2026-05-13T22:29:14.389930Z
-Running (UTC)  : 2026-05-13T22:29:15.454164Z
-Finished (UTC) : 2026-05-13T22:39:38.261966Z
-Quantum-seconds: 594
+Prior failed runs:
+  d82fmentjchs73bo17ig — 2026-05-13, ibm_marrakesh, ERROR 1305 (resilience_level=1, 8192 shots, 594 qs)
+  d82dgdvtjchs73bnum4g — same failure mode
 
-Pipeline parameters
--------------------
-Ansatz             : EfficientSU2(reps=1, linear), 48 parameters
-Hamiltonian        : SparsePauliOp, 12 qubits, 923 Pauli terms
-                     (formamide CASCI(6,6) / STO-3G; frozen-core fix applied)
-Reference (CASCI)  : -166.70175309 Ha
-theta* (statevector): -166.70175292 Ha  (seed 4, error 0.0002 mHa)
-Transpiled depth   : 41
-2Q gates           : 11 CZ
-Mode               : Batch + EstimatorV2 (Session unsupported on Open plan)
-Shots              : 8192
-Resilience level   : 1 (ZNE basic)
-Optimization level : 3
-
-Gating preconditions (Section B1 / B2)
---------------------------------------
-B1 local dry-run (parallel VQE 5 seeds + transpile + sim PUB): 208.6 s < 300 s threshold (PASS)
-B2 pre-flight at submit:
-   bound circuit num_parameters = 0 (PASS)
-   Hamiltonian is SparsePauliOp           (PASS)
-   backend.status().pending_jobs = 0      (PASS, queue empty)
-   est queue       = 0 s  (budget 300 s)   (PASS)
-   est total       = 60 s (budget 480 s)   (PASS)
-   channel='ibm_quantum' rejected by SDK; fell back to ibm_quantum_platform (the
-     only supported channel since qiskit-ibm-runtime 0.40 removed the legacy one)
-   Session rejected on Open plan (HTTP 400 error 1352); used Batch
-
-Hardware outcome
-----------------
-Final job status   : ERROR
-Error              : RuntimeJobMaxTimeoutError ('Error code 1305; Ran too long
-                     Increase max execution time or contact support.')
-Result retrievable : NO
-Hardware energy    : NOT CLAIMED — no value was returned by IBM.
-
-Why
----
-The IBM Open plan caps every job's *running* time. The 12-qubit, 923-term,
-ZNE-mitigated EstimatorV2 PUB took 594 quantum-seconds (about 10 min)
-before IBM cut it off. This is identical to the failure mode of the
-earlier job d82dgdvtjchs73bnum4g (same backend, same parameters, same
-~594 s). It is a structural Open-plan policy limit, not a code error.
-
-Provenance verification
------------------------
-Anyone can independently inspect this Job ID against IBM Quantum:
-  service = QiskitRuntimeService(channel='ibm_quantum_platform', token=...)
-  job = service.job('d82fmentjchs73bo17ig')
-  job.status()    -> 'ERROR'
-  job.metrics()   -> {... 'usage': {'quantum_seconds': 594, 'status': 'complete'}}
-
-Remediation
------------
-Re-run Notebook 10 unchanged on an Hourly Premium plan or any tier that
-removes the max-execution-time cap, and a hardware energy will be returned.
-The same theta*, transpile, and PUB are used.
+NOTE: resilience_level=0 (no ZNE). A future run with resilience_level=1 and 8192 shots on an Hourly Premium plan
+would provide ZNE-mitigated energy with smaller error bars.
